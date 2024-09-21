@@ -13,7 +13,7 @@ const SignUp = () => {
   const [bankAccountName, setBankAccountName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankName, setBankName] = useState("");
-  const [easypaisaAccountNumber, setEasypaisaAccountNumber] = useState("");
+  const [TelebirrAccountNumber, setTelebirrAccountNumber] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [profileImagePreview, setProfileImagePreview] = useState("");
@@ -36,7 +36,7 @@ const SignUp = () => {
       (formData.append("bankAccountName", bankAccountName),
       formData.append("bankAccountNumber", bankAccountNumber),
       formData.append("bankName", bankName),
-      formData.append("easypaisaAccountNumber", easypaisaAccountNumber),
+      formData.append("TelebirrAccountNumber", TelebirrAccountNumber),
       formData.append("paypalEmail", paypalEmail));
     dispatch(register(formData));
   };
@@ -173,15 +173,15 @@ const SignUp = () => {
                     disabled={role === "Bidder"}
                   >
                     <option value="">Select Your Bank</option>
-                    <option value="Meezan Bank">Meezan Bank</option>
-                    <option value="UBL">UBL</option>
-                    <option value="HBL">HBL</option>
-                    <option value="Allied Bank">Allied Bank</option>
+                    <option value="CBE">CBE</option>
+                    <option value="Awash">Awash</option>
+                    <option value="Dashen">Dashen</option>
+                    <option value="Abisiniya">Abisiniya</option>
                   </select>
                   <input
                     type="text"
                     value={bankAccountNumber}
-                    placeholder="IBAN / IFSC"
+                    placeholder="ACC NO"
                     onChange={(e) => setBankAccountNumber(e.target.value)}
                     className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none sm:flex-1"
                     disabled={role === "Bidder"}
@@ -198,14 +198,14 @@ const SignUp = () => {
               </div>
               <div>
                 <label className="text-[16px] text-stone-600 font-semibold">
-                  Easypaisa And Paypal Details
+                  TeleBirr And Paypal
                 </label>
                 <div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
                   <input
                     type="number"
-                    value={easypaisaAccountNumber}
-                    placeholder="Easypaisa Account Number"
-                    onChange={(e) => setEasypaisaAccountNumber(e.target.value)}
+                    value={TelebirrAccountNumber}
+                    placeholder="phone Number"
+                    onChange={(e) => setTelebirrAccountNumber(e.target.value)}
                     className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none sm:flex-1"
                     disabled={role === "Bidder"}
                   />

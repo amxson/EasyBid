@@ -69,7 +69,7 @@ const ViewAuctionDetails = () => {
                   <p className="text-xl font-semibold">
                     Minimum Bid:{" "}
                     <span className="text-[#D6482B]">
-                      Rs.{auctionDetail.startingBid}
+                      {auctionDetail.startingBid}Birr
                     </span>
                   </p>
                 </div>
