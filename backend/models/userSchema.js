@@ -36,8 +36,8 @@ const userSchema = new mongoose.Schema({
       bankAccountName: String,
       bankName: String,
     },
-    easypaisa: {
-      easypaisaAccountNumber: Number,
+    Telebirr: {
+      TelebirrAccountNumber: Number,
     },
     paypal: {
       paypalEmail: String,

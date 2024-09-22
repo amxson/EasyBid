@@ -26,7 +26,7 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     bankAccountNumber,
     bankAccountName,
     bankName,
-    easypaisaAccountNumber,
+    TelebirrAccountNumber,
     paypalEmail,
   } = req.body;
 
@@ -39,9 +39,9 @@ export const register = catchAsyncErrors(async (req, res, next) => {
         new ErrorHandler("Please provide your full bank details.", 400)
       );
     }
-    if (!easypaisaAccountNumber) {
+    if (!TelebirrAccountNumber) {
       return next(
-        new ErrorHandler("Please provide your easypaisa account number.", 400)
+        new ErrorHandler("Please provide your Telebirr account number.", 400)
       );
     }
     if (!paypalEmail) {
@@ -84,8 +84,8 @@ export const register = catchAsyncErrors(async (req, res, next) => {
         bankAccountName,
         bankName,
       },
-      easypaisa: {
-        easypaisaAccountNumber,
+      Telebirr: {
+        TelebirrAccountNumber,
       },
       paypal: {
         paypalEmail,
