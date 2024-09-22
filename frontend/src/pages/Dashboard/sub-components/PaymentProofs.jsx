@@ -2,6 +2,7 @@ import {
   deletePaymentProof,
   getSinglePaymentProofDetail,
   updatePaymentProof,
+  getAllUsers
 } from "@/store/slices/superAdminSlice";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,6 +26,7 @@ const PaymentProofs = () => {
   useEffect(() => {
     if (singlePaymentProof && Object.keys(singlePaymentProof).length > 0) {
       setOpenDrawer(true);
+
     }
   }, [singlePaymentProof]);
 
@@ -44,7 +46,7 @@ const PaymentProofs = () => {
               paymentProofs.map((element, index) => {
                 return (
                   <tr key={index}>
-                    <td className="py-2 px-4 text-center">{element.userId}</td>
+                    <td className="py-2 px-4 text-center">{getAllUsers.userId}</td>
                     <td className="py-2 px-4 text-center">{element.status}</td>
                     <td className="flex items-center py-4 justify-center gap-3">
                       <button
