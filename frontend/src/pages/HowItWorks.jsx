@@ -54,7 +54,7 @@ const HowItWorks = () => {
         <h1
           className={`text-[#d6482b] text-2xl font-bold mb-2 min-[480px]:text-4xl md:text-6xl xl:text-7xl 2xl:text-8xl`}
         >
-          Discover How PrimeBid Operates
+          Discover How Easybid Operates
         </h1>
         <div className="flex flex-col gap-4 my-5">
           {steps.map((element, index) => {

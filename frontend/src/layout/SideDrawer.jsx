@@ -40,7 +40,7 @@ const SideDrawer = () => {
         <div className="relative">
           <Link to={"/"}>
             <h4 className="text-2xl font-semibold mb-4">
-              Prime<span className="text-[#D6482b]">Bid</span>
+              Easy<span className="text-[#D6482b]">Bid</span>
             </h4>
           </Link>
           <ul className="flex flex-col gap-3">
@@ -181,7 +181,7 @@ const SideDrawer = () => {
           >
             Contact Us
           </Link>
-          <p className="text-stone-500">&copy; PrimeBid, LLC.</p>
+          <p className="text-stone-500">&copy; Easybid, LLC.</p>
           <p className="text-stone-500">
             Degined By{" "}
             <Link
