@@ -119,7 +119,9 @@ const AuctionItem = () => {
                             />
                             <p className="text-[18px] font-semibold">
                               {element.userName}
+                              
                             </p>
+                            <p className="flex-1 text-center">{element.amount}</p>
                           </div>
                           {index === 0 ? (
                             <p className="text-[20px] font-semibold text-green-600">
