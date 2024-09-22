@@ -61,7 +61,7 @@ const Card = ({ imgSrc, title, startingBid, startTime, endTime, id }) => {
             <p className="text-stone-600 font-light">
               Starting Bid:{" "}
               <span className="text-[#fdba88] font-bold ml-1">
-                {startingBid}
+              {new Intl.NumberFormat('en-US').format(startingBid)}
               </span>
             </p>
           )}

@@ -59,7 +59,7 @@ const UpcomingAuctions = () => {
                       Starting Bid:
                     </p>{" "}
                     <p className="text-[#fdba88 font-semibold]">
-                      Birr. {element.startingBid}
+                      Birr. {new Intl.NumberFormat('en-US').format(element.startingBid)}
                     </p>{" "}
                   </div>
                   <div className="flex flex-col">
@@ -93,7 +93,7 @@ const UpcomingAuctions = () => {
                       Starting Bid:
                     </p>{" "}
                     <p className="text-[#fdba88 font-semibold]">
-                      Birr. {element.startingBid}
+                      Birr. {new Intl.NumberFormat('en-US').format(element.startingBid)}
                     </p>{" "}
                   </div>
                   <div className="flex flex-col">
@@ -126,7 +126,7 @@ const UpcomingAuctions = () => {
                       Starting Bid:
                     </p>{" "}
                     <p className="text-[#fdba88 font-semibold]">
-                      Birr. {element.startingBid}
+                      Birr. {new Intl.NumberFormat('en-US').format(element.startingBid)}
                     </p>{" "}
                   </div>
                   <div className="flex flex-col">

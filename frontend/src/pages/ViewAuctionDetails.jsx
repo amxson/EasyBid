@@ -112,7 +112,7 @@ const ViewAuctionDetails = () => {
                             {element.userName}
                           </p>
                         </div>
-                        <p className="flex-1 text-center">{element.amount}</p>
+                        <p className="flex-1 text-center">{new Intl.NumberFormat('en-US').format(element.amount)}</p>
                         {index === 0 ? (
                           <p className="text-[20px] font-semibold text-green-600 flex-1 text-end">
                             1st

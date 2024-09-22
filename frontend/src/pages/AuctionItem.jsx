@@ -78,7 +78,7 @@ const AuctionItem = () => {
                   <p className="text-xl font-semibold">
                     Minimum Bid:{" "}
                     <span className="text-[#D6482B]">
-                      {auctionDetail.startingBid}Birr
+                      {new Intl.NumberFormat('en-US').format(auctionDetail.startingBid)}Birr
                     </span>
                   </p>
                 </div>
@@ -121,7 +121,7 @@ const AuctionItem = () => {
                               {element.userName}
                               
                             </p>
-                            <p className="flex-1 text-center">{element.amount}</p>
+                            <p className="flex-1 text-center">{new Intl.NumberFormat('en-US').format(element.amount)}</p>
                           </div>
                           {index === 0 ? (
                             <p className="text-[20px] font-semibold text-green-600">
