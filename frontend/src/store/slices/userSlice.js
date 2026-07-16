@@ -6,6 +6,7 @@ const userSlice = createSlice({
   name: "user",
   initialState: {
     loading: false,
+    authenticationChecked: false,
     isAuthenticated: false,
     user: {},
     leaderboard: [],
@@ -18,11 +19,13 @@ const userSlice = createSlice({
     },
     registerSuccess(state, action) {
       state.loading = false;
+      state.authenticationChecked = true;
       state.isAuthenticated = true;
       state.user = action.payload.user;
     },
     registerFailed(state, action) {
       state.loading = false;
+      state.authenticationChecked = true;
       state.isAuthenticated = false;
       state.user = {};
     },
@@ -33,31 +36,37 @@ const userSlice = createSlice({
     },
     loginSuccess(state, action) {
       state.loading = false;
+      state.authenticationChecked = true;
       state.isAuthenticated = true;
       state.user = action.payload.user;
     },
     loginFailed(state, action) {
       state.loading = false;
+      state.authenticationChecked = true;
       state.isAuthenticated = false;
       state.user = {};
     },
     fetchUserRequest(state, action) {
       state.loading = true;
+      state.authenticationChecked = false;
       state.isAuthenticated = false;
       state.user = {};
     },
     fetchUserSuccess(state, action) {
       state.loading = false;
+      state.authenticationChecked = true;
       state.isAuthenticated = true;
       state.user = action.payload;
     },
     fetchUserFailed(state, action) {
       state.loading = false;
+      state.authenticationChecked = true;
       state.isAuthenticated = false;
       state.user = {};
     },
 
     logoutSuccess(state, action) {
+      state.authenticationChecked = true;
       state.isAuthenticated = false;
       state.user = {};
     },
@@ -91,7 +100,7 @@ export const register = (data) => async (dispatch) => {
   dispatch(userSlice.actions.registerRequest());
   try {
     const response = await axios.post(
-      "https://easybid.onrender.com/api/v1/user/register",
+      "/api/v1/user/register",
       data,
       {
         withCredentials: true,
@@ -112,7 +121,7 @@ export const login = (data) => async (dispatch) => {
   dispatch(userSlice.actions.loginRequest());
   try {
     const response = await axios.post(
-      "https://easybid.onrender.com/api/v1/user/login",
+      "/api/v1/user/login",
       data,
       {
         withCredentials: true,
@@ -132,7 +141,7 @@ export const login = (data) => async (dispatch) => {
 export const logout = () => async (dispatch) => {
   try {
     const response = await axios.get(
-      "https://easybid.onrender.com/api/v1/user/logout",
+      "/api/v1/user/logout",
       { withCredentials: true }
     );
     dispatch(userSlice.actions.logoutSuccess());
@@ -148,7 +157,7 @@ export const logout = () => async (dispatch) => {
 export const fetchUser = () => async (dispatch) => {
   dispatch(userSlice.actions.fetchUserRequest());
   try {
-    const response = await axios.get("https://easybid.onrender.com/api/v1/user/me", {
+    const response = await axios.get("/api/v1/user/me", {
       withCredentials: true,
     });
     dispatch(userSlice.actions.fetchUserSuccess(response.data.user));
@@ -164,7 +173,7 @@ export const fetchLeaderboard = () => async (dispatch) => {
   dispatch(userSlice.actions.fetchLeaderboardRequest());
   try {
     const response = await axios.get(
-      "https://easybid.onrender.com/api/v1/user/leaderboard",
+      "/api/v1/user/leaderboard",
       {
         withCredentials: true,
       }

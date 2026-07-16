@@ -4,6 +4,9 @@ import App from "./App.jsx";
 import "./index.css";
 import { store } from "@/store/store.js";
 import { Provider } from "react-redux";
+import axios from "axios";
+
+axios.defaults.baseURL = import.meta.env.VITE_API_URL ?? "";
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>

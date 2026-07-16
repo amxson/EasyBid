@@ -24,7 +24,7 @@ export const postCommissionProof = (data) => async (dispatch) => {
   dispatch(commissionSlice.actions.postCommissionProofRequest());
   try {
     const response = await axios.post(
-      "https://easybid.onrender.com/api/v1/commission/proof",
+      "/api/v1/commission/proof",
       data,
       {
         withCredentials: true,

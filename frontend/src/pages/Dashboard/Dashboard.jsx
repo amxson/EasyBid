@@ -16,20 +16,34 @@ import { useNavigate } from "react-router-dom";
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.superAdmin);
+  const {
+    user,
+    isAuthenticated,
+    authenticationChecked,
+  } = useSelector((state) => state.user);
+  const navigateTo = useNavigate();
+
   useEffect(() => {
+    if (!authenticationChecked) {
+      return;
+    }
+
+    if (!isAuthenticated || user.role !== "Super Admin") {
+      navigateTo("/");
+      return;
+    }
+
     dispatch(getMonthlyRevenue());
     dispatch(getAllUsers());
     dispatch(getAllPaymentProofs());
     dispatch(clearAllSuperAdminSliceErrors());
-  }, []);
-
-  const { user, isAuthenticated } = useSelector((state) => state.user);
-  const navigateTo = useNavigate();
-  useEffect(() => {
-    if (user.role !== "Super Admin" || !isAuthenticated) {
-      navigateTo("/");
-    }
-  }, [isAuthenticated]);
+  }, [
+    authenticationChecked,
+    dispatch,
+    isAuthenticated,
+    navigateTo,
+    user.role,
+  ]);
 
   return (
     <>

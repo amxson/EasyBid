@@ -19,7 +19,9 @@ dotenv.config();
 
 app.use(
   cors({
-    origin: ['https://easybid.vercel.app'], // Explicitly allow your frontend's origin
+    origin: (process.env.FRONTEND_URL || "http://localhost:5173")
+      .split(",")
+      .map((origin) => origin.trim()),
     methods: ["POST", "GET", "PUT", "DELETE"],
     credentials: true, // This allows cookies and other credentials to be sent
   })
@@ -42,8 +44,14 @@ app.use("/api/v1/bid", bidRouter);
 app.use("/api/v1/commission", commissionRouter);
 app.use("/api/v1/superadmin", superAdminRouter);
 
-endedAuctionCron();
-verifyCommissionCron();
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ success: true, message: "EasyBid API is running" });
+});
+
+if (process.env.DISABLE_CRON !== "true") {
+  endedAuctionCron();
+  verifyCommissionCron();
+}
 connection();
 app.use(errorMiddleware);
 
