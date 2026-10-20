@@ -6,7 +6,7 @@ import { Auction } from "../models/auctionSchema.js";
 export const checkAuctionEndTime = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return next(new ErrorHandler("Invalud ID format.", 400));
+    return next(new ErrorHandler("Invalid ID format.", 400));
   }
   const auction = await Auction.findById(id);
   if (!auction) {
@@ -14,10 +14,10 @@ export const checkAuctionEndTime = catchAsyncErrors(async (req, res, next) => {
   }
   const now = new Date();
   if (new Date(auction.startTime) > now) {
-    return next(new ErrorHandler("Auction has not started yet.", 400));
+    return next(new ErrorHandler("Auction has not started yet.", 409));
   }
-  if (new Date(auction.endTime) < now) {
-    return next(new ErrorHandler("Auction is ended.", 400));
+  if (new Date(auction.endTime) <= now) {
+    return next(new ErrorHandler("Auction has ended.", 409));
   }
   next();
 });

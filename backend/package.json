@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "cloudinary": "^2.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -9,8 +9,8 @@
     "express-fileupload": "^1.5.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.3",
-    "node-cron": "^3.0.3",
-    "nodemailer": "^6.9.14"
+    "node-cron": "^4.6.0",
+    "nodemailer": "^10.1.7"
   },
   "devDependencies": {
     "mongodb-memory-server-core": "^10.4.3"
@@ -23,9 +23,14 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node scripts/seed.js",
-    "demo": "node scripts/demo-server.js"
+    "demo": "node scripts/demo-server.js",
+    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "migrate": "node scripts/migrate.js"
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "engines": {
+    "node": ">=22"
+  }
 }

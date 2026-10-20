@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
+import { moneyAmount } from "../utils/validation.js";
 import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 import ErrorHandler from "../middlewares/error.js";
 import { Commission } from "../models/commissionSchema.js";
 import { User } from "../models/userSchema.js";
+import { Bid } from "../models/bidSchema.js";
 import { Auction } from "../models/auctionSchema.js";
 import { PaymentProof } from "../models/commissionProofSchema.js";
 
@@ -15,7 +17,10 @@ export const deleteAuctionItem = catchAsyncErrors(async (req, res, next) => {
   if (!auctionItem) {
     return next(new ErrorHandler("Auction not found.", 404));
   }
-  await auctionItem.deleteOne();
+  await mongoose.connection.transaction(async (session) => {
+    await Auction.deleteOne({ _id: id }, { session });
+    await Bid.deleteMany({ auctionItem: id }, { session });
+  });
   res.status(200).json({
     success: true,
     message: "Auction item deleted successfully.",
@@ -34,16 +39,21 @@ export const getPaymentProofDetail = catchAsyncErrors(
   async (req, res, next) => {
     const { id } = req.params;
     const paymentProofDetail = await PaymentProof.findById(id);
+    if (!paymentProofDetail)
+      throw new ErrorHandler("Payment proof not found.", 404);
     res.status(200).json({
       success: true,
       paymentProofDetail,
     });
-  }
+  },
 );
 
 export const updateProofStatus = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
-  const { amount, status } = req.body;
+  const { status } = req.body;
+  const amount = moneyAmount(req.body.amount);
+  if (!["Pending", "Approved", "Rejected"].includes(status))
+    throw new ErrorHandler("Invalid review status.", 400);
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return next(new ErrorHandler("Invalid ID format.", 400));
   }
@@ -51,15 +61,16 @@ export const updateProofStatus = catchAsyncErrors(async (req, res, next) => {
   if (!proof) {
     return next(new ErrorHandler("Payment proof not found.", 404));
   }
-  proof = await PaymentProof.findByIdAndUpdate(
-    id,
+  proof = await PaymentProof.findOneAndUpdate(
+    { _id: id, status: { $ne: "Settled" } },
     { status, amount },
     {
       new: true,
       runValidators: true,
       useFindAndModify: false,
-    }
+    },
   );
+  if (!proof) throw new ErrorHandler("Settled proofs cannot be edited.", 409);
   res.status(200).json({
     success: true,
     message: "Payment proof amount and status updated.",
@@ -73,7 +84,20 @@ export const deletePaymentProof = catchAsyncErrors(async (req, res, next) => {
   if (!proof) {
     return next(new ErrorHandler("Payment proof not found.", 404));
   }
-  await proof.deleteOne();
+  if (!["Pending", "Rejected"].includes(proof.status))
+    throw new ErrorHandler(
+      "Approved or settled proofs cannot be deleted.",
+      409,
+    );
+  const removed = await PaymentProof.findOneAndDelete({
+    _id: id,
+    status: { $in: ["Pending", "Rejected"] },
+  });
+  if (!removed)
+    throw new ErrorHandler(
+      "Proof changed during review. Refresh and try again.",
+      409,
+    );
   res.status(200).json({
     success: true,
     message: "Payment proof deleted.",
@@ -83,10 +107,18 @@ export const deletePaymentProof = catchAsyncErrors(async (req, res, next) => {
 export const fetchAllUsers = catchAsyncErrors(async (req, res, next) => {
   const users = await User.aggregate([
     {
+      $match: {
+        createdAt: {
+          $gte: new Date(new Date().getFullYear(), 0, 1),
+          $lt: new Date(new Date().getFullYear() + 1, 0, 1),
+        },
+      },
+    },
+    {
       $group: {
         _id: {
           month: { $month: "$createdAt" },
-          year: { $month: "$createdAt" },
+          year: { $year: "$createdAt" },
           role: "$role",
         },
         count: { $sum: 1 },
@@ -131,6 +163,14 @@ export const fetchAllUsers = catchAsyncErrors(async (req, res, next) => {
 
 export const monthlyRevenue = catchAsyncErrors(async (req, res, next) => {
   const payments = await Commission.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: new Date(new Date().getFullYear(), 0, 1),
+          $lt: new Date(new Date().getFullYear() + 1, 0, 1),
+        },
+      },
+    },
     {
       $group: {
         _id: {

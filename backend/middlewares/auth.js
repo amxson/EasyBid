@@ -6,10 +6,16 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 export const isAuthenticated = catchAsyncErrors(async (req, res, next) => {
   const token = req.cookies.token;
   if (!token) {
-    return next(new ErrorHandler("User not authenticated.", 400));
+    return next(new ErrorHandler("Please log in to continue.", 401));
   }
   const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  req.user = await User.findById(decoded.id);
+  req.user = await User.findById(decoded.id).select("+tokenVersion");
+  if (!req.user) return next(new ErrorHandler("Please log in again.", 401));
+  if ((decoded.version || 0) !== (req.user.tokenVersion || 0)) {
+    return next(
+      new ErrorHandler("Password changed. Please log in again.", 401),
+    );
+  }
   next();
 });
 
@@ -19,8 +25,8 @@ export const isAuthorized = (...roles) => {
       return next(
         new ErrorHandler(
           `${req.user.role} not allowed to access this resouce.`,
-          403
-        )
+          403,
+        ),
       );
     }
     next();

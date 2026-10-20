@@ -1,71 +1,103 @@
+import mongoose from "mongoose";
 import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 import ErrorHandler from "../middlewares/error.js";
 import { Auction } from "../models/auctionSchema.js";
 import { Bid } from "../models/bidSchema.js";
-import { User } from "../models/userSchema.js";
+import { moneyAmount } from "../utils/validation.js";
 
-export const placeBid = catchAsyncErrors(async (req, res, next) => {
+export const placeBid = catchAsyncErrors(async (req, res) => {
   const { id } = req.params;
-  const auctionItem = await Auction.findById(id);
-  if (!auctionItem) {
-    return next(new ErrorHandler("Auction Item not found.", 404));
-  }
-  const { amount } = req.body;
-  if (!amount) {
-    return next(new ErrorHandler("Please place your bid.", 404));
-  }
-  if (amount <= auctionItem.currentBid) {
-    return next(
-      new ErrorHandler("Bid amount must be greater than the current bid.", 404)
-    );
-  }
-  if (amount < auctionItem.startingBid) {
-    return next(
-      new ErrorHandler("Bid amount must be greater than starting bid.", 404)
-    );
-  }
-
-  try {
-    const existingBid = await Bid.findOne({
-      "bidder.id": req.user._id,
-      auctionItem: auctionItem._id,
-    });
-    const existingBidInAuction = auctionItem.bids.find(
-      (bid) => bid.userId.toString() == req.user._id.toString()
-    );
-    if (existingBid && existingBidInAuction) {
-      existingBidInAuction.amount = amount;
-      existingBid.amount = amount;
-      await existingBidInAuction.save();
-      await existingBid.save();
-      auctionItem.currentBid = amount;
-    } else {
-      const bidderDetail = await User.findById(req.user._id);
-      const bid = await Bid.create({
-        amount,
-        bidder: {
-          id: bidderDetail._id,
-          userName: bidderDetail.userName,
-          profileImage: bidderDetail.profileImage?.url,
+  if (!mongoose.isObjectIdOrHexString(id))
+    throw new ErrorHandler("Invalid auction ID.", 400);
+  const amount = moneyAmount(req.body.amount);
+  let currentBid;
+  // A conflicting transaction is retried against a fresh snapshot. The price,
+  // embedded bidder list, and Bid record either all commit or all roll back.
+  await mongoose.connection.transaction(async (session) => {
+    const auction = await Auction.findById(id).session(session);
+    if (!auction) throw new ErrorHandler("Auction not found.", 404);
+    if (auction.createdBy.equals(req.user._id))
+      throw new ErrorHandler("You cannot bid on your own auction.", 403);
+    const now = Date.now();
+    if (
+      ![auction.startTime, auction.endTime].every((value) =>
+        Number.isFinite(new Date(value).getTime()),
+      )
+    )
+      throw new ErrorHandler(
+        "Auction times need to be corrected by the seller.",
+        409,
+      );
+    if (new Date(auction.startTime).getTime() > now)
+      throw new ErrorHandler("Auction has not started yet.", 409);
+    if (
+      new Date(auction.endTime).getTime() <= now ||
+      auction.commissionCalculated
+    )
+      throw new ErrorHandler("Auction has ended.", 409);
+    if (amount < auction.startingBid)
+      throw new ErrorHandler("Bid must meet the starting price.", 400);
+    if (amount <= auction.currentBid)
+      throw new ErrorHandler(
+        "The price has changed. Bid above the current bid.",
+        409,
+      );
+    const bidder = {
+      userId: req.user._id,
+      userName: req.user.userName,
+      profileImage: req.user.profileImage?.url,
+      amount,
+    };
+    const bids = auction.bids.filter((bid) => !bid.userId.equals(req.user._id));
+    bids.push(bidder);
+    const updated = await Auction.findOneAndUpdate(
+      {
+        _id: id,
+        currentBid: auction.currentBid,
+        commissionCalculated: false,
+        // Check the deadline again using database time, including legacy dates.
+        $expr: {
+          $and: [
+            {
+              $lte: [
+                {
+                  $convert: { input: "$startTime", to: "date", onError: null },
+                },
+                "$$NOW",
+              ],
+            },
+            {
+              $gt: [
+                { $convert: { input: "$endTime", to: "date", onError: null } },
+                "$$NOW",
+              ],
+            },
+          ],
         },
-        auctionItem: auctionItem._id,
-      });
-      auctionItem.bids.push({
-        userId: req.user._id,
-        userName: bidderDetail.userName,
-        profileImage: bidderDetail.profileImage?.url,
-        amount,
-      });
-      auctionItem.currentBid = amount;
-    }
-    await auctionItem.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Bid placed.",
-      currentBid: auctionItem.currentBid,
-    });
-  } catch (error) {
-    return next(new ErrorHandler(error.message || "Failed to place bid.", 500));
-  }
+      },
+      { $set: { currentBid: amount, highestBidder: req.user._id, bids } },
+      { new: true, session, runValidators: true },
+    );
+    if (!updated)
+      throw new ErrorHandler(
+        "Auction changed or ended. Refresh and try again.",
+        409,
+      );
+    await Bid.updateOne(
+      { auctionItem: auction._id, "bidder.id": req.user._id },
+      {
+        $set: {
+          amount,
+          bidder: {
+            id: req.user._id,
+            userName: bidder.userName,
+            profileImage: bidder.profileImage,
+          },
+        },
+      },
+      { upsert: true, session, runValidators: true },
+    );
+    currentBid = updated.currentBid;
+  });
+  res.status(201).json({ success: true, message: "Bid placed.", currentBid });
 });

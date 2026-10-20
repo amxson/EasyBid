@@ -17,32 +17,32 @@ router.post(
   isAuthenticated,
   isAuthorized("Auctioneer"),
   trackCommissionStatus,
-  addNewAuctionItem
+  addNewAuctionItem,
 );
 
 router.get("/allitems", getAllItems);
 
-router.get("/auction/:id", isAuthenticated, getAuctionDetails);
+router.get("/auction/:id", getAuctionDetails);
 
 router.get(
   "/myitems",
   isAuthenticated,
   isAuthorized("Auctioneer"),
-  getMyAuctionItems
+  getMyAuctionItems,
 );
 
 router.delete(
   "/delete/:id",
   isAuthenticated,
   isAuthorized("Auctioneer"),
-  removeFromAuction
+  removeFromAuction,
 );
 
 router.put(
   "/item/republish/:id",
   isAuthenticated,
   isAuthorized("Auctioneer"),
-  republishItem
+  republishItem,
 );
 
 export default router;

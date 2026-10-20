@@ -5,28 +5,32 @@ import { User } from "../models/userSchema.js";
 import { Auction } from "../models/auctionSchema.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
+import { moneyAmount } from "../utils/validation.js";
 
 export const calculateCommission = async (auctionId) => {
-  const auction = await Auction.findById(auctionId);
   if (!mongoose.Types.ObjectId.isValid(auctionId)) {
-    return next(new ErrorHandler("Invalid Auction Id format.", 400));
+    throw new ErrorHandler("Invalid Auction Id format.", 400);
   }
+  const auction = await Auction.findById(auctionId);
+  if (!auction) throw new ErrorHandler("Auction not found.", 404);
   const commissionRate = 0.05;
-  const commission = Math.floor(auction.currentBid * commissionRate);
+  const commission =
+    Math.round(auction.currentBid * commissionRate * 100) / 100;
   return commission;
 };
 
 export const proofOfCommission = catchAsyncErrors(async (req, res, next) => {
-  if (!req.files || Object.keys(req.files).length === 0) {
+  if (!req.files?.proof || Array.isArray(req.files.proof)) {
     return next(new ErrorHandler("Payment Proof Screenshot required.", 400));
   }
   const { proof } = req.files;
-  const { amount, comment } = req.body;
+  const { comment } = req.body;
+  const amount = moneyAmount(req.body.amount);
   const user = await User.findById(req.user._id);
 
   if (!amount || !comment) {
     return next(
-      new ErrorHandler("Ammount & comment are required fields.", 400)
+      new ErrorHandler("Ammount & comment are required fields.", 400),
     );
   }
 
@@ -41,8 +45,8 @@ export const proofOfCommission = catchAsyncErrors(async (req, res, next) => {
     return next(
       new ErrorHandler(
         `The amount exceeds your unpaid commission balance. Please enter an amount up to ${user.unpaidCommission}`,
-        403
-      )
+        400,
+      ),
     );
   }
 
@@ -55,12 +59,12 @@ export const proofOfCommission = catchAsyncErrors(async (req, res, next) => {
     proof.tempFilePath,
     {
       folder: "MERN_AUCTION_PAYMENT_PROOFS",
-    }
+    },
   );
   if (!cloudinaryResponse || cloudinaryResponse.error) {
     console.error(
       "Cloudinary error:",
-      cloudinaryResponse.error || "Unknown cloudinary error."
+      cloudinaryResponse?.error || "Unknown cloudinary error.",
     );
     return next(new ErrorHandler("Failed to upload payment proof.", 500));
   }
