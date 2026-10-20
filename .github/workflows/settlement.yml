@@ -1,0 +1,27 @@
+name: Settle auctions
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: production-settlement
+  cancel-in-progress: false
+
+jobs:
+  settle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Process ended auctions, commissions, and queued emails
+        env:
+          CRON_SECRET: ${{ secrets.EASYBID_CRON_SECRET }}
+        run: |
+          test -n "$CRON_SECRET"
+          curl --fail-with-body --silent --show-error \
+            --connect-timeout 15 --max-time 65 \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            https://easy-bid-dltk.vercel.app/api/internal/jobs
