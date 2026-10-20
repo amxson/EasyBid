@@ -2,11 +2,12 @@ import PropTypes from "prop-types";
 import { useNow } from "@/hooks/useNow";
 import { countdown } from "@/lib/auctions";
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { deleteAuction, republishAuction } from "@/store/slices/auctionSlice";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
 
 const CardTwo = ({ imgSrc, title, startingBid, startTime, endTime, id }) => {
   const now = useNow();
@@ -106,12 +107,14 @@ const Drawer = ({ setOpenDrawer, id }) => {
   const dispatch = useDispatch();
   const [startTime, setStartTime] = useState(null);
   const [endTime, setEndTime] = useState(null);
-  const { loading } = useSelector((state) => state.auction);
-  const handleRepbulishAuction = () => {
-    const formData = new FormData();
-    formData.append("startTime", startTime);
-    formData.append("endTime", endTime);
-    dispatch(republishAuction(id, formData));
+  const form = useFormSubmission();
+  const handleRepbulishAuction = async (event) => {
+    event.preventDefault();
+    if (!startTime || !endTime || startTime <= new Date() || endTime <= startTime) {
+      form.setError("Choose a future start time and an end time after it."); return;
+    }
+    if (await form.submit(() => dispatch(republishAuction(id, { startTime: startTime.toISOString(), endTime: endTime.toISOString() }))))
+      setOpenDrawer(false);
   };
 
   return (
@@ -133,42 +136,45 @@ const Drawer = ({ setOpenDrawer, id }) => {
             Let&apos;s republish auction with same details but new starting and
             ending time.
           </p>
-          <form className="flex flex-col gap-5 my-5">
+          <form onSubmit={handleRepbulishAuction} aria-busy={form.submitting} className="flex flex-col gap-5 my-5">
             <div className="flex flex-col gap-3">
-              <label className="text-[16px] text-stone-600">
+              <label htmlFor={`republish-start-${id}`} className="text-[16px] text-stone-600">
                 Republish Auction Start Time
               </label>
               <DatePicker
+                id={`republish-start-${id}`} required minDate={new Date()}
                 selected={startTime}
                 onChange={(date) => setStartTime(date)}
                 showTimeSelect
                 timeFormat="HH:mm"
                 timeIntervals={15}
-                dateFormat={"MMMM d, yyyy h,mm aa"}
+                dateFormat={"MMMM d, yyyy h:mm aa"}
                 className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden w-full"
               />
             </div>
             <div className="flex flex-col gap-3">
-              <label className="text-[16px] text-stone-600">
+              <label htmlFor={`republish-end-${id}`} className="text-[16px] text-stone-600">
                 Republish Auction End Time
               </label>
               <DatePicker
+                id={`republish-end-${id}`} required minDate={startTime || new Date()}
                 selected={endTime}
                 onChange={(date) => setEndTime(date)}
                 showTimeSelect
                 timeFormat="HH:mm"
                 timeIntervals={15}
-                dateFormat={"MMMM d, yyyy h,mm aa"}
+                dateFormat={"MMMM d, yyyy h:mm aa"}
                 className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden w-full"
               />
             </div>
+            {form.error && <p role="alert" className="text-[#b8381e]">{form.error}</p>}
             <div>
               <button
-                type="button"
+                type="submit"
                 className="bg-blue-500 flex justify-center w-full py-2 rounded-md text-white font-semibold text-xl transition-all duration-300 hover:bg-blue-700"
-                onClick={handleRepbulishAuction}
+                disabled={form.submitting}
               >
-                {loading ? "Republishing" : "Republish"}
+                {form.submitting ? "Republishing..." : "Republish"}
               </button>
             </div>
             <div>

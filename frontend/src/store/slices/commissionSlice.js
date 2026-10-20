@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { requestError } from "@/lib/forms";
 
 const commissionSlice = createSlice({
   name: "commission",
@@ -25,16 +26,16 @@ export const postCommissionProof = (data) => async (dispatch) => {
   try {
     const response = await axios.post("/api/v1/commission/proof", data, {
       withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 45000,
     });
     dispatch(commissionSlice.actions.postCommissionProofSuccess());
     toast.success(response.data.message);
+    return { success: true, message: response.data.message };
   } catch (error) {
     dispatch(commissionSlice.actions.postCommissionProofFailed());
-    toast.error(
-      error.response?.data?.message ||
-        "Cannot reach EasyBid. Please try again.",
-    );
+    const message = requestError(error);
+    toast.error(message);
+    return { success: false, message };
   }
 };
 

@@ -13,7 +13,7 @@ export async function startTestServer() {
     instanceOpts: [
       {
         args: [
-          "--nounixsocket",
+          ...(process.platform === "win32" ? [] : ["--nounixsocket"]),
           "--setParameter",
           "diagnosticDataCollectionEnabled=false",
         ],
@@ -27,19 +27,23 @@ export async function startTestServer() {
   const url = `http://127.0.0.1:${server.address().port}`;
   return {
     async request(path, { user, cookie, method = "GET", body } = {}) {
+      const multipart = body instanceof FormData;
       const response = await fetch(`${url}${path}`, {
         method,
         headers: {
-          ...(body ? { "Content-Type": "application/json" } : {}),
+          ...(body && !multipart ? { "Content-Type": "application/json" } : {}),
           ...(user || cookie
             ? { Cookie: cookie || `token=${user.generateJsonWebToken()}` }
             : {}),
         },
-        body: body ? JSON.stringify(body) : undefined,
+        body: multipart ? body : body ? JSON.stringify(body) : undefined,
       });
+      const text = await response.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { message: text }; }
       return {
         status: response.status,
-        data: await response.json(),
+        data,
         headers: response.headers,
       };
     },

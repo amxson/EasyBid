@@ -2,19 +2,22 @@ import { login } from "@/store/slices/userSlice";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { loading, isAuthenticated } = useSelector((state) => state.user);
+  const { isAuthenticated } = useSelector((state) => state.user);
+  const form = useFormSubmission();
 
   const navigateTo = useNavigate();
   const dispatch = useDispatch();
 
   const handleLogin = (e) => {
     e.preventDefault();
-    dispatch(login({ email, password }));
+    if (!email.trim() || !password) { form.setError("Enter your email and password."); return; }
+    form.submit(() => dispatch(login({ email: email.trim(), password })));
   };
 
   useEffect(() => {
@@ -32,7 +35,7 @@ const Login = () => {
           >
             Login
           </h1>
-          <form onSubmit={handleLogin} className="flex flex-col gap-5 w-full">
+          <form onSubmit={handleLogin} aria-busy={form.submitting} className="flex flex-col gap-5 w-full">
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="login-email"
@@ -67,12 +70,13 @@ const Login = () => {
                 className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
               />
             </div>
+            {form.error && <p role="alert" className="text-[#b8381e]">{form.error}</p>}
             <button
               className="bg-[#d6482b] font-semibold hover:bg-[#b8381e] transition-all duration-300 text-xl py-2 px-4 rounded-md text-white mx-auto my-4"
-              disabled={loading}
+              disabled={form.submitting}
               type="submit"
             >
-              {loading ? "Logging In..." : "Login"}
+              {form.submitting ? "Logging In..." : "Login"}
             </button>
             <Link
               to="/forgot-password"

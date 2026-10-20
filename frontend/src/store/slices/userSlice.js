@@ -1,11 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { requestError } from "@/lib/forms";
 
 const userSlice = createSlice({
   name: "user",
   initialState: {
     loading: false,
+    authGeneration: 0,
+    leaderboardLoading: false,
     authenticationChecked: false,
     isAuthenticated: false,
     user: {},
@@ -13,6 +16,7 @@ const userSlice = createSlice({
   },
   reducers: {
     registerRequest(state) {
+      state.authGeneration = (state.authGeneration || 0) + 1;
       state.loading = true;
       state.isAuthenticated = false;
       state.user = {};
@@ -30,6 +34,7 @@ const userSlice = createSlice({
       state.user = {};
     },
     loginRequest(state) {
+      state.authGeneration = (state.authGeneration || 0) + 1;
       state.loading = true;
       state.isAuthenticated = false;
       state.user = {};
@@ -66,6 +71,7 @@ const userSlice = createSlice({
     },
 
     logoutSuccess(state) {
+      state.authGeneration = (state.authGeneration || 0) + 1;
       state.authenticationChecked = true;
       state.isAuthenticated = false;
       state.user = {};
@@ -74,15 +80,15 @@ const userSlice = createSlice({
       state.loading = false;
     },
     fetchLeaderboardRequest(state) {
-      state.loading = true;
+      state.leaderboardLoading = true;
       state.leaderboard = [];
     },
     fetchLeaderboardSuccess(state, action) {
-      state.loading = false;
+      state.leaderboardLoading = false;
       state.leaderboard = action.payload;
     },
     fetchLeaderboardFailed(state) {
-      state.loading = false;
+      state.leaderboardLoading = false;
       state.leaderboard = [];
     },
     clearAllErrors(state) {
@@ -96,18 +102,18 @@ export const register = (data) => async (dispatch) => {
   try {
     const response = await axios.post("/api/v1/user/register", data, {
       withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 45000,
     });
     dispatch(userSlice.actions.registerSuccess(response.data));
     toast.success(response.data.message);
     dispatch(userSlice.actions.clearAllErrors());
+    return { success: true, message: response.data.message };
   } catch (error) {
     dispatch(userSlice.actions.registerFailed());
-    toast.error(
-      error.response?.data?.message ||
-        "Cannot reach EasyBid. Please try again.",
-    );
+    const message = requestError(error);
+    toast.error(message);
     dispatch(userSlice.actions.clearAllErrors());
+    return { success: false, message };
   }
 };
 
@@ -121,13 +127,13 @@ export const login = (data) => async (dispatch) => {
     dispatch(userSlice.actions.loginSuccess(response.data));
     toast.success(response.data.message);
     dispatch(userSlice.actions.clearAllErrors());
+    return { success: true, message: response.data.message };
   } catch (error) {
     dispatch(userSlice.actions.loginFailed());
-    toast.error(
-      error.response?.data?.message ||
-        "Cannot reach EasyBid. Please try again.",
-    );
+    const message = requestError(error);
+    toast.error(message);
     dispatch(userSlice.actions.clearAllErrors());
+    return { success: false, message };
   }
 };
 
@@ -151,15 +157,18 @@ export const logout = () => async (dispatch) => {
   }
 };
 
-export const fetchUser = () => async (dispatch) => {
+export const fetchUser = () => async (dispatch, getState) => {
+  const generation = getState().user.authGeneration;
   dispatch(userSlice.actions.fetchUserRequest());
   try {
     const response = await axios.get("/api/v1/user/me", {
       withCredentials: true,
     });
+    if (getState().user.authGeneration !== generation) return;
     dispatch(userSlice.actions.fetchUserSuccess(response.data.user));
     dispatch(userSlice.actions.clearAllErrors());
   } catch (error) {
+    if (getState().user.authGeneration !== generation) return;
     dispatch(userSlice.actions.fetchUserFailed());
     dispatch(userSlice.actions.clearAllErrors());
     console.error(error);
@@ -175,10 +184,8 @@ export const fetchLeaderboard = () => async (dispatch) => {
     dispatch(
       userSlice.actions.fetchLeaderboardSuccess(response.data.leaderboard),
     );
-    dispatch(userSlice.actions.clearAllErrors());
   } catch (error) {
     dispatch(userSlice.actions.fetchLeaderboardFailed());
-    dispatch(userSlice.actions.clearAllErrors());
     console.error(error);
   }
 };

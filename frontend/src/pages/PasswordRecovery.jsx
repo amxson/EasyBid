@@ -1,43 +1,39 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
 
 export default function PasswordRecovery() {
   const { token } = useParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const form = useFormSubmission();
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   async function submit(event) {
     event.preventDefault();
-    setError("");
+    form.setError("");
     setMessage("");
     if (token && password !== confirmPassword) {
-      setError("Passwords do not match.");
+      form.setError("Passwords do not match.");
       return;
     }
-    setLoading(true);
-    try {
+    if (token && (password.length < 8 || new TextEncoder().encode(password).length > 72)) {
+      form.setError("Choose a password of at least 8 characters. Shorten it if it is too long."); return;
+    }
+    await form.submit(async () => {
       const response = token
         ? await axios.put(
             `/api/v1/user/password/reset/${token}`,
             { password, confirmPassword },
             { withCredentials: true },
           )
-        : await axios.post("/api/v1/user/password/forgot", { email });
+        : await axios.post("/api/v1/user/password/forgot", { email: email.trim() });
       setMessage(response.data.message);
       setDone(true);
-    } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "Cannot reach EasyBid. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
+      return response.data;
+    });
   }
   return (
     <section className="w-full px-5 pt-24 lg:pl-[320px] min-h-screen">
@@ -55,9 +51,9 @@ export default function PasswordRecovery() {
             {message}
           </p>
         )}
-        {error && (
+        {form.error && (
           <p role="alert" className="mb-4 text-[#b8381e]">
-            {error}
+            {form.error}
           </p>
         )}
         {!done && (
@@ -104,10 +100,10 @@ export default function PasswordRecovery() {
               </>
             )}
             <button
-              disabled={loading}
+              disabled={form.submitting}
               className="bg-[#d6482b] hover:bg-[#b8381e] text-white font-semibold rounded-md py-3"
             >
-              {loading
+              {form.submitting
                 ? "Please wait…"
                 : token
                   ? "Update password"

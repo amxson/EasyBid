@@ -1,4 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
+import { unlink } from "node:fs/promises";
+import { MAX_IMAGE_BYTES } from "./utils/imageUpload.js";
 import {
   processEndedAuctions,
   processApprovedProofs,
@@ -50,12 +52,21 @@ app.use((req, res, next) => {
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  res.once("finish", () => {
+    for (const file of Object.values(req.files || {}).flat()) {
+      if (file.tempFilePath) unlink(file.tempFilePath).catch(() => {});
+    }
+  });
+  next();
+});
 app.use(
   fileUpload({
     useTempFiles: true,
     tempFileDir: "/tmp/",
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: MAX_IMAGE_BYTES },
     abortOnLimit: true,
+    responseOnLimit: "Choose an image no larger than 4 MB.",
   }),
 );
 

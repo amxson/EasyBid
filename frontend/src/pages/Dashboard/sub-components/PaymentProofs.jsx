@@ -7,6 +7,8 @@ import {
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { amountError } from "@/lib/forms";
 
 const PaymentProofs = () => {
   const { paymentProofs, singlePaymentProof } = useSelector(
@@ -84,16 +86,20 @@ const PaymentProofs = () => {
 
 export default PaymentProofs;
 export const Drawer = ({ setOpenDrawer }) => {
-  const { singlePaymentProof, loading } = useSelector(
+  const { singlePaymentProof } = useSelector(
     (state) => state.superAdmin,
   );
   const [amount, setAmount] = useState(singlePaymentProof.amount || "");
   const [status, setStatus] = useState(singlePaymentProof.status || "");
+  const form = useFormSubmission();
 
   const dispatch = useDispatch();
-  const handlePaymentProofUpdate = async () => {
+  const handlePaymentProofUpdate = async (event) => {
+    event.preventDefault();
+    const problem = amountError(amount);
+    if (problem) { form.setError(problem); return; }
     if (
-      await dispatch(updatePaymentProof(singlePaymentProof._id, status, amount))
+      await form.submit(() => dispatch(updatePaymentProof(singlePaymentProof._id, status, amount)))
     )
       setOpenDrawer(false);
   };
@@ -117,7 +123,7 @@ export const Drawer = ({ setOpenDrawer }) => {
             <p className="text-stone-600">
               You can update payment status and amount.
             </p>
-            <form className="flex flex-col gap-5 my-5">
+            <form onSubmit={handlePaymentProofUpdate} aria-busy={form.submitting} className="flex flex-col gap-5 my-5">
               <div className="flex flex-col gap-3">
                 <label className="text-[16px] text-stone-600 ">User ID</label>
                 <input
@@ -137,6 +143,7 @@ export const Drawer = ({ setOpenDrawer }) => {
                 </label>
                 <input
                   id="proof-amount"
+                  required
                   min="0.01"
                   step="0.01"
                   disabled={singlePaymentProof.status === "Settled"}
@@ -147,8 +154,9 @@ export const Drawer = ({ setOpenDrawer }) => {
                 />
               </div>
               <div className="flex flex-col gap-3">
-                <label className="text-[16px] text-stone-600">Status</label>
+                <label htmlFor="proof-status" className="text-[16px] text-stone-600">Status</label>
                 <select
+                  id="proof-status" required
                   disabled={singlePaymentProof.status === "Settled"}
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
@@ -181,14 +189,14 @@ export const Drawer = ({ setOpenDrawer }) => {
                   Payment Proof (SS)
                 </Link>
               </div>
+              {form.error && <p role="alert" className="text-[#b8381e]">{form.error}</p>}
               <div>
                 <button
-                  type="button"
+                  type="submit"
                   className="bg-blue-500 flex justify-center w-full py-2 rounded-md text-white font-semibold text-xl transition-all duration-300 hover:bg-blue-700"
-                  disabled={loading || singlePaymentProof.status === "Settled"}
-                  onClick={handlePaymentProofUpdate}
+                  disabled={form.submitting || singlePaymentProof.status === "Settled"}
                 >
-                  {loading ? "Updating Payment Proof" : "Update Payment Proof"}
+                  {form.submitting ? "Updating Payment Proof..." : "Update Payment Proof"}
                 </button>
               </div>
               <div>

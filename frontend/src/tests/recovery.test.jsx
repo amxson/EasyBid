@@ -17,6 +17,7 @@ const page = (url) =>
 it("submits an email and renders the neutral recovery response", async () => {
   axios.post.mockResolvedValue({
     data: {
+      success: true,
       message:
         "If that address has an account, a reset link will arrive shortly.",
     },
@@ -29,6 +30,7 @@ it("submits an email and renders the neutral recovery response", async () => {
   await waitFor(() =>
     expect(screen.getByRole("status").textContent).toContain("reset link"),
   );
+  expect(screen.queryByRole("alert")).toBeNull();
   expect(axios.post).toHaveBeenCalledWith("/api/v1/user/password/forgot", {
     email: "person@example.com",
   });

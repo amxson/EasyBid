@@ -2,7 +2,7 @@ import Spinner from "@/custom-components/Spinner";
 import { useSelector } from "react-redux";
 
 const Leaderboard = () => {
-  const { loading, leaderboard } = useSelector((state) => state.user);
+  const { leaderboardLoading: loading, leaderboard } = useSelector((state) => state.user);
   return (
     <>
       <section className="w-full ml-0 m-0 h-fit px-5 pt-20 lg:pl-[320px] flex flex-col">

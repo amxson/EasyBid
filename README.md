@@ -86,7 +86,7 @@ Backend configuration is listed in `backend/.env.example`.
 | `CRON_SECRET` | Bearer secret for the scheduled-job endpoint |
 | `OPENAI_API_KEY`, `OPENAI_MODEL` | Optional AI bid help; both must be set to enable it |
 
-Cloudinary is required for uploads. Files are limited to 5 MB. SMTP is required for real email delivery. Password recovery gives the same response for known and unknown addresses; check mail-service logs if delivery fails.
+Cloudinary is required for uploads. Profile photos, auction photos, and payment proof screenshots must be JPEG, PNG, or WebP images no larger than 4 MB. This leaves room for form data within Vercel's request limit. SMTP is required for real email delivery. Password recovery gives the same response for known and unknown addresses; check mail-service logs if delivery fails.
 
 AI help is off unless configured. The built-in guide still explains deadlines, bidding rules, payments, and budget limits. If enabled, the visitor can choose to send their question, recent conversation, budget, and public listing details to OpenAI. Account and payment records are not added to those requests. The key stays on the backend. AI answers cannot place bids, initiate payments, or change accounts. Provider failures fall back to the guide.
 

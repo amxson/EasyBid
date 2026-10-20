@@ -3,8 +3,9 @@ import { sendEmail } from "../utils/sendEmail.js";
 import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 import ErrorHandler from "../middlewares/error.js";
 import { User } from "../models/userSchema.js";
-import { v2 as cloudinary } from "cloudinary";
 import { cookieOptions, generateToken } from "../utils/jwtToken.js";
+import { registrationDetails } from "../utils/validation.js";
+import { validateImage, uploadImage } from "../utils/imageUpload.js";
 
 const emailQuery = (email) => ({
   email: {
@@ -23,11 +24,6 @@ export const register = catchAsyncErrors(async (req, res, next) => {
 
   const { profileImage } = req.files;
 
-  const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
-  if (!allowedFormats.includes(profileImage.mimetype)) {
-    return next(new ErrorHandler("File format not supported.", 400));
-  }
-
   const {
     userName,
     email,
@@ -40,59 +36,13 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     bankName,
     TelebirrAccountNumber,
     paypalEmail,
-  } = req.body;
-
-  if (!userName || !email || !phone || !password || !address || !role) {
-    return next(new ErrorHandler("Please fill full form.", 400));
-  }
-  if (role === "Auctioneer") {
-    const bankComplete = bankAccountName && bankAccountNumber && bankName;
-    const bankPartial = bankAccountName || bankAccountNumber || bankName;
-    if (bankPartial && !bankComplete)
-      return next(
-        new ErrorHandler("Complete all bank fields or leave them empty.", 400),
-      );
-    if (!bankComplete && !TelebirrAccountNumber && !paypalEmail)
-      return next(
-        new ErrorHandler(
-          "Add a bank account, Telebirr number, or PayPal email for receiving payment.",
-          400,
-        ),
-      );
-  }
-  if (
-    typeof email !== "string" ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
-    typeof password !== "string" ||
-    password.length < 8 ||
-    Buffer.byteLength(password, "utf8") > 72
-  ) {
-    return next(
-      new ErrorHandler(
-        "Use a valid email and a password of 8 to 72 characters.",
-        400,
-      ),
-    );
-  }
+  } = registrationDetails(req.body);
+  await validateImage(profileImage);
   const isRegistered = await User.findOne(emailQuery(email));
   if (isRegistered) {
     return next(new ErrorHandler("User already registered.", 409));
   }
-  const cloudinaryResponse = await cloudinary.uploader.upload(
-    profileImage.tempFilePath,
-    {
-      folder: "MERN_AUCTION_PLATFORM_USERS",
-    },
-  );
-  if (!cloudinaryResponse || cloudinaryResponse.error) {
-    console.error(
-      "Cloudinary error:",
-      cloudinaryResponse?.error || "Unknown cloudinary error.",
-    );
-    return next(
-      new ErrorHandler("Failed to upload profile image to cloudinary.", 500),
-    );
-  }
+  const cloudinaryResponse = await uploadImage(profileImage, "MERN_AUCTION_PLATFORM_USERS");
   const user = await User.create({
     userName,
     email,

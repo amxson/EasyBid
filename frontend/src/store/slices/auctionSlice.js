@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { requestError } from "@/lib/forms";
 
 const auctionSlice = createSlice({
   name: "auction",
@@ -149,19 +150,19 @@ export const createAuction = (data) => async (dispatch) => {
   try {
     const response = await axios.post("/api/v1/auctionitem/create", data, {
       withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 45000,
     });
     dispatch(auctionSlice.actions.createAuctionSuccess());
     toast.success(response.data.message);
     dispatch(getAllAuctionItems());
     dispatch(auctionSlice.actions.resetSlice());
+    return { success: true, message: response.data.message };
   } catch (error) {
     dispatch(auctionSlice.actions.createAuctionFailed());
-    toast.error(
-      error.response?.data?.message ||
-        "Cannot reach EasyBid. Please try again.",
-    );
+    const message = requestError(error);
+    toast.error(message);
     dispatch(auctionSlice.actions.resetSlice());
+    return { success: false, message };
   }
 };
 
@@ -181,6 +182,7 @@ export const republishAuction = (id, data) => async (dispatch) => {
     dispatch(getMyAuctionItems());
     dispatch(getAllAuctionItems());
     dispatch(auctionSlice.actions.resetSlice());
+    return { success: true, message: response.data.message };
   } catch (error) {
     dispatch(auctionSlice.actions.republishItemFailed());
     toast.error(
@@ -192,6 +194,7 @@ export const republishAuction = (id, data) => async (dispatch) => {
         "Cannot reach EasyBid. Please try again.",
     );
     dispatch(auctionSlice.actions.resetSlice());
+    return { success: false, message: requestError(error) };
   }
 };
 

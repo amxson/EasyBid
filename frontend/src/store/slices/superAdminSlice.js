@@ -2,6 +2,7 @@ import axios from "axios";
 import { createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import { getAllAuctionItems } from "./auctionSlice";
+import { requestError } from "@/lib/forms";
 
 const superAdminSlice = createSlice({
   name: "superAdmin",
@@ -215,7 +216,7 @@ export const updatePaymentProof = (id, status, amount) => async (dispatch) => {
     toast.success(response.data.message);
     dispatch(getAllPaymentProofs());
     dispatch(superAdminSlice.actions.clearAllErrors());
-    return true;
+    return { success: true, message: response.data.message };
   } catch (error) {
     dispatch(superAdminSlice.actions.failureForUpdatePaymentProof());
     console.error(
@@ -226,7 +227,7 @@ export const updatePaymentProof = (id, status, amount) => async (dispatch) => {
       error.response?.data?.message ||
         "Cannot reach EasyBid. Please try again.",
     );
-    return false;
+    return { success: false, message: requestError(error) };
   }
 };
 

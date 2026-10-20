@@ -29,7 +29,8 @@ export const errorMiddleware = (err, req, res, next) => {
   }
   if (status >= 500) {
     console.error("Request failed:", err);
-    message = "Something went wrong. Please try again.";
+    if (!(err instanceof ErrorHandler && status === 503))
+      message = "Something went wrong. Please try again.";
   }
   res.status(status).json({ success: false, message });
 };

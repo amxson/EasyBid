@@ -2,9 +2,9 @@ import { Auction } from "../models/auctionSchema.js";
 import { Bid } from "../models/bidSchema.js";
 import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 import ErrorHandler from "../middlewares/error.js";
-import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import { auctionTimes, moneyAmount } from "../utils/validation.js";
+import { validateImage, uploadImage } from "../utils/imageUpload.js";
 
 export const addNewAuctionItem = catchAsyncErrors(async (req, res, next) => {
   if (!req.files?.image || Array.isArray(req.files.image)) {
@@ -12,11 +12,6 @@ export const addNewAuctionItem = catchAsyncErrors(async (req, res, next) => {
   }
 
   const { image } = req.files;
-
-  const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
-  if (!allowedFormats.includes(image.mimetype)) {
-    return next(new ErrorHandler("File format not supported.", 400));
-  }
 
   const {
     title,
@@ -28,18 +23,18 @@ export const addNewAuctionItem = catchAsyncErrors(async (req, res, next) => {
     endTime,
   } = req.body;
   if (
-    !title ||
-    !description ||
-    !category ||
-    !condition ||
+    [title, description, category, condition].some((value) => typeof value !== "string" || !value.trim()) ||
     !startingBid ||
     !startTime ||
     !endTime
   ) {
     return next(new ErrorHandler("Please provide all details.", 400));
   }
+  if (title.trim().length > 150 || description.trim().length > 10000 || !["New", "Used"].includes(condition))
+    throw new ErrorHandler("Use a title of up to 150 characters, a description of up to 10,000 characters, and a valid condition.", 400);
   const times = auctionTimes(startTime, endTime);
   const price = moneyAmount(startingBid);
+  await validateImage(image);
   const alreadyOneAuctionActive = await Auction.find({
     createdBy: req.user._id,
     endTime: { $gt: new Date().toISOString() },
@@ -48,25 +43,11 @@ export const addNewAuctionItem = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("You already have one active auction.", 409));
   }
   try {
-    const cloudinaryResponse = await cloudinary.uploader.upload(
-      image.tempFilePath,
-      {
-        folder: "MERN_AUCTION_PLATFORM_AUCTIONS",
-      },
-    );
-    if (!cloudinaryResponse || cloudinaryResponse.error) {
-      console.error(
-        "Cloudinary error:",
-        cloudinaryResponse?.error || "Unknown cloudinary error.",
-      );
-      return next(
-        new ErrorHandler("Failed to upload auction image to cloudinary.", 500),
-      );
-    }
+    const cloudinaryResponse = await uploadImage(image, "MERN_AUCTION_PLATFORM_AUCTIONS");
     const auctionItem = await Auction.create({
-      title,
-      description,
-      category,
+      title: title.trim(),
+      description: description.trim(),
+      category: category.trim(),
       condition,
       startingBid: price,
       ...times,

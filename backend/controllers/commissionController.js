@@ -3,9 +3,9 @@ import ErrorHandler from "../middlewares/error.js";
 import { PaymentProof } from "../models/commissionProofSchema.js";
 import { User } from "../models/userSchema.js";
 import { Auction } from "../models/auctionSchema.js";
-import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import { moneyAmount } from "../utils/validation.js";
+import { validateImage, uploadImage } from "../utils/imageUpload.js";
 
 export const calculateCommission = async (auctionId) => {
   if (!mongoose.Types.ObjectId.isValid(auctionId)) {
@@ -28,11 +28,12 @@ export const proofOfCommission = catchAsyncErrors(async (req, res, next) => {
   const amount = moneyAmount(req.body.amount);
   const user = await User.findById(req.user._id);
 
-  if (!amount || !comment) {
+  if (typeof comment !== "string" || !comment.trim() || comment.trim().length > 2000) {
     return next(
-      new ErrorHandler("Ammount & comment are required fields.", 400),
+      new ErrorHandler("Enter a comment of 1 to 2,000 characters.", 400),
     );
   }
+  await validateImage(proof);
 
   if (user.unpaidCommission === 0) {
     return res.status(200).json({
@@ -50,24 +51,7 @@ export const proofOfCommission = catchAsyncErrors(async (req, res, next) => {
     );
   }
 
-  const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
-  if (!allowedFormats.includes(proof.mimetype)) {
-    return next(new ErrorHandler("ScreenShot format not supported.", 400));
-  }
-
-  const cloudinaryResponse = await cloudinary.uploader.upload(
-    proof.tempFilePath,
-    {
-      folder: "MERN_AUCTION_PAYMENT_PROOFS",
-    },
-  );
-  if (!cloudinaryResponse || cloudinaryResponse.error) {
-    console.error(
-      "Cloudinary error:",
-      cloudinaryResponse?.error || "Unknown cloudinary error.",
-    );
-    return next(new ErrorHandler("Failed to upload payment proof.", 500));
-  }
+  const cloudinaryResponse = await uploadImage(proof, "MERN_AUCTION_PAYMENT_PROOFS");
   const commissionProof = await PaymentProof.create({
     userId: req.user._id,
     proof: {
@@ -75,12 +59,12 @@ export const proofOfCommission = catchAsyncErrors(async (req, res, next) => {
       url: cloudinaryResponse.secure_url,
     },
     amount,
-    comment,
+    comment: comment.trim(),
   });
   res.status(201).json({
     success: true,
     message:
-      "Your proof has been submitted successfully. We will review it and responed to you within 24 hours.",
+      "Your proof has been submitted successfully and is awaiting review.",
     commissionProof,
   });
 });
