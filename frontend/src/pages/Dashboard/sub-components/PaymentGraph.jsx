@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -21,7 +20,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   LineElement,
-  PointElement
+  PointElement,
 );
 
 const PaymentGraph = () => {
@@ -55,7 +54,6 @@ const PaymentGraph = () => {
     scales: {
       y: {
         beginAtZero: true,
-        max: 5000,
         ticks: {
           callback: function (value) {
             return value.toLocaleString();

@@ -9,32 +9,40 @@ const bidSlice = createSlice({
     loading: false,
   },
   reducers: {
-    bidRequest(state, action) {
+    bidRequest(state) {
       state.loading = true;
     },
-    bidSuccess(state, action) {
+    bidSuccess(state) {
       state.loading = false;
     },
-    bidFailed(state, action) {
+    bidFailed(state) {
       state.loading = false;
     },
   },
 });
 
-export const placeBid = (id, data) => async (dispatch) => {
+export const placeBid = (id, data) => async (dispatch, getState) => {
+  if (getState().bid.loading) return false;
   dispatch(bidSlice.actions.bidRequest());
   try {
     const response = await axios.post(`/api/v1/bid/place/${id}`, data, {
       withCredentials: true,
       headers: { "Content-Type": "application/json" },
     });
-    dispatch(bidSlice.actions.bidSuccess());
     toast.success(response.data.message);
-    dispatch(getAuctionDetail(id))
+    await dispatch(getAuctionDetail(id, { silent: true }));
+    dispatch(bidSlice.actions.bidSuccess());
+    return true;
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
+    if (error.response?.status === 409)
+      await dispatch(getAuctionDetail(id, { silent: true }));
     dispatch(bidSlice.actions.bidFailed());
-    toast.error(error.response.data.message);
+    return false;
   }
 };
 
-export default bidSlice.reducer
+export default bidSlice.reducer;

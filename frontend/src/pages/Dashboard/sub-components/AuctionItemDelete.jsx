@@ -1,5 +1,4 @@
 import { deleteAuctionItem } from "@/store/slices/superAdminSlice";
-import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
@@ -29,6 +28,14 @@ const AuctionItemDelete = () => {
                   <tr key={element._id}>
                     <td className="py-2 px-4">
                       <img
+                        onError={(event) => {
+                          if (
+                            !event.currentTarget.src.endsWith(
+                              "/imageHolder.jpg",
+                            )
+                          )
+                            event.currentTarget.src = "/imageHolder.jpg";
+                        }}
                         src={element.image?.url}
                         alt={element.title}
                         className="h-12 w-12 object-cover rounded"

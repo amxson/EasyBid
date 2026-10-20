@@ -1,5 +1,5 @@
 import { register } from "@/store/slices/userSlice";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -45,10 +45,11 @@ const SignUp = () => {
     if (isAuthenticated) {
       navigateTo("/");
     }
-  }, [dispatch, loading, isAuthenticated]);
+  }, [navigateTo, isAuthenticated]);
 
   const imageHandler = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
@@ -80,7 +81,7 @@ const SignUp = () => {
                   type="text"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none"
+                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
                 />
               </div>
               <div className="flex flex-col sm:flex-1">
@@ -89,7 +90,7 @@ const SignUp = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none"
+                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
                 />
               </div>
             </div>
@@ -97,10 +98,10 @@ const SignUp = () => {
               <div className="flex flex-col sm:flex-1">
                 <label className="text-[16px] text-stone-600">Phone</label>
                 <input
-                  type="number"
+                  type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none"
+                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
                 />
               </div>
               <div className="flex flex-col sm:flex-1">
@@ -109,7 +110,7 @@ const SignUp = () => {
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none"
+                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
                 />
               </div>
             </div>
@@ -119,7 +120,7 @@ const SignUp = () => {
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none"
+                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
                 >
                   <option value="">Select Role</option>
                   <option value="Auctioneer">Auctioneer</option>
@@ -132,7 +133,7 @@ const SignUp = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none"
+                  className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
                 />
               </div>
             </div>
@@ -142,6 +143,10 @@ const SignUp = () => {
               </label>
               <div className="flex items-center gap-3">
                 <img
+                  onError={(event) => {
+                    if (!event.currentTarget.src.endsWith("/imageHolder.jpg"))
+                      event.currentTarget.src = "/imageHolder.jpg";
+                  }}
                   src={
                     profileImagePreview
                       ? profileImagePreview
@@ -157,8 +162,8 @@ const SignUp = () => {
               <label className="font-semibold text-xl md:2xl flex flex-col">
                 Payment Method Details{" "}
                 <span className="text-[12px] text-stone-500">
-                  Fill Payment Details Only If you are registering as an
-                  Auctioneer
+                  Fill Payment Details (add at least one method) Only If you are
+                  registering as an Auctioneer
                 </span>
               </label>
               <div className="flex flex-col gap-2">
@@ -169,7 +174,7 @@ const SignUp = () => {
                   <select
                     value={bankName}
                     onChange={(e) => setBankName(e.target.value)}
-                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none sm:flex-1"
+                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden sm:flex-1"
                     disabled={role === "Bidder"}
                   >
                     <option value="">Select Your Bank</option>
@@ -183,7 +188,7 @@ const SignUp = () => {
                     value={bankAccountNumber}
                     placeholder="ACC NO"
                     onChange={(e) => setBankAccountNumber(e.target.value)}
-                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none sm:flex-1"
+                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden sm:flex-1"
                     disabled={role === "Bidder"}
                   />
                   <input
@@ -191,7 +196,7 @@ const SignUp = () => {
                     value={bankAccountName}
                     placeholder="Bank Account UserName"
                     onChange={(e) => setBankAccountName(e.target.value)}
-                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none sm:flex-1"
+                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden sm:flex-1"
                     disabled={role === "Bidder"}
                   />
                 </div>
@@ -202,11 +207,11 @@ const SignUp = () => {
                 </label>
                 <div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
                   <input
-                    type="number"
+                    type="tel"
                     value={TelebirrAccountNumber}
                     placeholder="phone Number"
                     onChange={(e) => setTelebirrAccountNumber(e.target.value)}
-                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none sm:flex-1"
+                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden sm:flex-1"
                     disabled={role === "Bidder"}
                   />
                   <input
@@ -214,7 +219,7 @@ const SignUp = () => {
                     value={paypalEmail}
                     placeholder="Paypal Email"
                     onChange={(e) => setPaypalEmail(e.target.value)}
-                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none sm:flex-1"
+                    className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden sm:flex-1"
                     disabled={role === "Bidder"}
                   />
                 </div>

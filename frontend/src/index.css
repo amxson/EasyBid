@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "./legacy-theme.css";
+@config "../tailwind.config.js";
 
 @layer base {
   :root {
@@ -74,5 +74,37 @@
   #root {
     overflow-x: hidden;
     width: 100%;
+  }
+}
+
+@layer base {
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  :where(a, button, input, select, textarea, summary):focus-visible {
+    outline: 2px solid #d6482b;
+    outline-offset: 3px;
+  }
+  input,
+  select,
+  textarea {
+    color: #292524;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }

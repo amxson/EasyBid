@@ -4,7 +4,7 @@ import {
   getAllUsers,
   getMonthlyRevenue,
 } from "@/store/slices/superAdminSlice";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AuctionItemDelete from "./sub-components/AuctionItemDelete";
 import BiddersAuctioneersGraph from "./sub-components/BiddersAuctioneersGraph";
@@ -16,11 +16,9 @@ import { useNavigate } from "react-router-dom";
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.superAdmin);
-  const {
-    user,
-    isAuthenticated,
-    authenticationChecked,
-  } = useSelector((state) => state.user);
+  const { user, isAuthenticated, authenticationChecked } = useSelector(
+    (state) => state.user,
+  );
   const navigateTo = useNavigate();
 
   useEffect(() => {
@@ -37,13 +35,7 @@ const Dashboard = () => {
     dispatch(getAllUsers());
     dispatch(getAllPaymentProofs());
     dispatch(clearAllSuperAdminSliceErrors());
-  }, [
-    authenticationChecked,
-    dispatch,
-    isAuthenticated,
-    navigateTo,
-    user.role,
-  ]);
+  }, [authenticationChecked, dispatch, isAuthenticated, navigateTo, user.role]);
 
   return (
     <>

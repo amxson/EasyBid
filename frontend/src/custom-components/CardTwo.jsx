@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import { useNow } from "@/hooks/useNow";
+import { countdown } from "@/lib/auctions";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import DatePicker from "react-datepicker";
@@ -6,40 +9,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { deleteAuction, republishAuction } from "@/store/slices/auctionSlice";
 
 const CardTwo = ({ imgSrc, title, startingBid, startTime, endTime, id }) => {
-  const calculateTimeLeft = () => {
-    const now = new Date();
-    const startDifference = new Date(startTime) - now;
-    const endDifference = new Date(endTime) - now;
-    let timeLeft = {};
-
-    if (startDifference > 0) {
-      timeLeft = {
-        type: "Starts In:",
-        days: Math.floor(startDifference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((startDifference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((startDifference / 1000 / 60) % 60),
-        seconds: Math.floor((startDifference / 1000) % 60),
-      };
-    } else if (endDifference > 0) {
-      timeLeft = {
-        type: "Ends In:",
-        days: Math.floor(endDifference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((endDifference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((endDifference / 1000 / 60) % 60),
-        seconds: Math.floor((endDifference / 1000) % 60),
-      };
-    }
-    return timeLeft;
-  };
-
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTimeLeft(calculateTimeLeft());
-    });
-    return () => clearTimeout(timer);
-  }, [timeLeft]);
+  const now = useNow();
+  const timeLeft = countdown(startTime, endTime, now);
 
   const formatTimeLeft = ({ days, hours, minutes, seconds }) => {
     const pad = (num) => String(num).padStart(2, "0");
@@ -55,11 +26,16 @@ const CardTwo = ({ imgSrc, title, startingBid, startTime, endTime, id }) => {
 
   return (
     <>
-      <div className="basis-full bg-white rounded-md group sm:basis-56 lg:basis-60 2xl:basis-80">
+      <div className="basis-full bg-white rounded-md border border-stone-200 shadow-xs hover:shadow-md transition-shadow group sm:basis-56 lg:basis-60 2xl:basis-80">
         <img
+          onError={(event) => {
+            if (!event.currentTarget.src.endsWith("/item-placeholder.svg"))
+              event.currentTarget.src = "/item-placeholder.svg";
+          }}
           src={imgSrc}
           alt={title}
-          className="w-full aspect-[4/3] m-auto md:p-12"
+          loading="lazy"
+          className="w-full aspect-[4/3] object-contain bg-stone-50 p-6"
         />
         <div className="px-2 pt-4 pb-2">
           <h5 className="font-semibold text-[18px] group-hover:text-[#d6482b] mb-2">
@@ -80,7 +56,9 @@ const CardTwo = ({ imgSrc, title, startingBid, startTime, endTime, id }) => {
                 {formatTimeLeft(timeLeft)}
               </span>
             ) : (
-              <span className="text-[#fdba88] font-bold ml-1">Time's up!</span>
+              <span className="text-[#fdba88] font-bold ml-1">
+                Time&apos;s up!
+              </span>
             )}
           </p>
           <div className="flex flex-col gap-2 mt-4">
@@ -106,18 +84,29 @@ const CardTwo = ({ imgSrc, title, startingBid, startTime, endTime, id }) => {
           </div>
         </div>
       </div>
-      <Drawer id={id} openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} />
+      {openDrawer && (
+        <Drawer id={id} openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} />
+      )}
     </>
   );
 };
 
+CardTwo.propTypes = {
+  imgSrc: PropTypes.string,
+  title: PropTypes.string,
+  startingBid: PropTypes.number,
+  startTime: PropTypes.string,
+  endTime: PropTypes.string,
+  id: PropTypes.string,
+};
+
 export default CardTwo;
 
-const Drawer = ({ setOpenDrawer, openDrawer, id }) => {
+const Drawer = ({ setOpenDrawer, id }) => {
   const dispatch = useDispatch();
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const {loading} = useSelector(state => state.auction);
+  const [startTime, setStartTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const { loading } = useSelector((state) => state.auction);
   const handleRepbulishAuction = () => {
     const formData = new FormData();
     formData.append("startTime", startTime);
@@ -127,9 +116,13 @@ const Drawer = ({ setOpenDrawer, openDrawer, id }) => {
 
   return (
     <section
-      className={`fixed ${
-        openDrawer && id ? "bottom-0" : "-bottom-full"
-      }  left-0 w-full transition-all duration-300 h-full bg-[#00000087] flex items-end`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Republish auction"
+      className="fixed inset-0 z-[60] w-full h-full bg-[#00000087] flex items-end"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpenDrawer(false);
+      }}
     >
       <div className="bg-white h-fit transition-all duration-300 w-full">
         <div className="w-full px-5 py-8 sm:max-w-[640px] sm:m-auto">
@@ -137,7 +130,7 @@ const Drawer = ({ setOpenDrawer, openDrawer, id }) => {
             Republish Auction
           </h3>
           <p className="text-stone-600">
-            Let's republish auction with same details but new starting and
+            Let&apos;s republish auction with same details but new starting and
             ending time.
           </p>
           <form className="flex flex-col gap-5 my-5">
@@ -152,7 +145,7 @@ const Drawer = ({ setOpenDrawer, openDrawer, id }) => {
                 timeFormat="HH:mm"
                 timeIntervals={15}
                 dateFormat={"MMMM d, yyyy h,mm aa"}
-                className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none w-full"
+                className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden w-full"
               />
             </div>
             <div className="flex flex-col gap-3">
@@ -166,7 +159,7 @@ const Drawer = ({ setOpenDrawer, openDrawer, id }) => {
                 timeFormat="HH:mm"
                 timeIntervals={15}
                 dateFormat={"MMMM d, yyyy h,mm aa"}
-                className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none w-full"
+                className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden w-full"
               />
             </div>
             <div>
@@ -175,7 +168,7 @@ const Drawer = ({ setOpenDrawer, openDrawer, id }) => {
                 className="bg-blue-500 flex justify-center w-full py-2 rounded-md text-white font-semibold text-xl transition-all duration-300 hover:bg-blue-700"
                 onClick={handleRepbulishAuction}
               >
-                {loading ? "Republishing" : "Republish"} 
+                {loading ? "Republishing" : "Republish"}
               </button>
             </div>
             <div>
@@ -192,4 +185,9 @@ const Drawer = ({ setOpenDrawer, openDrawer, id }) => {
       </div>
     </section>
   );
+};
+
+Drawer.propTypes = {
+  setOpenDrawer: PropTypes.func.isRequired,
+  id: PropTypes.string,
 };

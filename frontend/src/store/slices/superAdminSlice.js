@@ -14,7 +14,7 @@ const superAdminSlice = createSlice({
     singlePaymentProof: {},
   },
   reducers: {
-    requestForMonthlyRevenue(state, action) {
+    requestForMonthlyRevenue(state) {
       state.loading = true;
       state.monthlyRevenue = [];
     },
@@ -22,11 +22,11 @@ const superAdminSlice = createSlice({
       state.loading = false;
       state.monthlyRevenue = action.payload;
     },
-    failedForMonthlyRevenue(state, action) {
+    failedForMonthlyRevenue(state) {
       state.loading = false;
       state.monthlyRevenue = [];
     },
-    requestForAllUsers(state, action) {
+    requestForAllUsers(state) {
       state.loading = true;
       state.totalAuctioneers = [];
       state.totalBidders = [];
@@ -36,12 +36,12 @@ const superAdminSlice = createSlice({
       state.totalAuctioneers = action.payload.auctioneersArray;
       state.totalBidders = action.payload.biddersArray;
     },
-    failureForAllUsers(state, action) {
+    failureForAllUsers(state) {
       state.loading = false;
       state.totalAuctioneers = [];
       state.totalBidders = [];
     },
-    requestForPaymentProofs(state, action) {
+    requestForPaymentProofs(state) {
       state.loading = true;
       state.paymentProofs = [];
     },
@@ -49,20 +49,20 @@ const superAdminSlice = createSlice({
       state.loading = false;
       state.paymentProofs = action.payload;
     },
-    failureForPaymentProofs(state, action) {
+    failureForPaymentProofs(state) {
       state.loading = false;
       state.paymentProofs = [];
     },
-    requestForDeletePaymentProof(state, action) {
+    requestForDeletePaymentProof(state) {
       state.loading = true;
     },
-    successForDeletePaymentProof(state, action) {
+    successForDeletePaymentProof(state) {
       state.loading = false;
     },
-    failureForDeletePaymentProof(state, action) {
+    failureForDeletePaymentProof(state) {
       state.loading = false;
     },
-    requestForSinglePaymentProofDetail(state, action) {
+    requestForSinglePaymentProofDetail(state) {
       state.loading = true;
       state.singlePaymentProof = {};
     },
@@ -70,34 +70,31 @@ const superAdminSlice = createSlice({
       state.loading = false;
       state.singlePaymentProof = action.payload;
     },
-    failureForSinglePaymentProofDetail(state, action) {
+    failureForSinglePaymentProofDetail(state) {
       state.loading = false;
       state.singlePaymentProof = {};
     },
-    requestForUpdatePaymentProof(state, action) {
+    requestForUpdatePaymentProof(state) {
       state.loading = true;
     },
-    successForUpdatePaymentProof(state, action) {
+    successForUpdatePaymentProof(state) {
       state.loading = false;
     },
-    failureForUpdatePaymentProof(state, action) {
+    failureForUpdatePaymentProof(state) {
       state.loading = false;
     },
-    requestForAuctionItemDelete(state, action) {
+    requestForAuctionItemDelete(state) {
       state.loading = true;
     },
-    successForAuctionItemDelete(state, action) {
+    successForAuctionItemDelete(state) {
       state.loading = false;
     },
-    failureForAuctionItemDelete(state, action) {
+    failureForAuctionItemDelete(state) {
       state.loading = false;
     },
-    clearAllErrors(state, action) {
+    clearAllErrors(state) {
       state.loading = false;
-      state.monthlyRevenue = state.monthlyRevenue;
-      state.paymentProofs = state.paymentProofs;
-      state.totalAuctioneers = state.totalAuctioneers;
-      state.totalBidders = state.totalBidders;
+
       state.singlePaymentProof = {};
     },
   },
@@ -106,32 +103,36 @@ const superAdminSlice = createSlice({
 export const getMonthlyRevenue = () => async (dispatch) => {
   dispatch(superAdminSlice.actions.requestForMonthlyRevenue());
   try {
-    const response = await axios.get(
-      "/api/v1/superadmin/monthlyincome",
-      { withCredentials: true }
-    );
+    const response = await axios.get("/api/v1/superadmin/monthlyincome", {
+      withCredentials: true,
+    });
     dispatch(
       superAdminSlice.actions.successForMonthlyRevenue(
-        response.data.totalMonthlyRevenue
-      )
+        response.data.totalMonthlyRevenue,
+      ),
     );
   } catch (error) {
     dispatch(superAdminSlice.actions.failedForMonthlyRevenue());
-    console.error(error.response.data.message);
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
   }
 };
 
 export const getAllUsers = () => async (dispatch) => {
   dispatch(superAdminSlice.actions.requestForAllUsers());
   try {
-    const response = await axios.get(
-      "/api/v1/superadmin/users/getall",
-      { withCredentials: true }
-    );
+    const response = await axios.get("/api/v1/superadmin/users/getall", {
+      withCredentials: true,
+    });
     dispatch(superAdminSlice.actions.successForAllUsers(response.data));
   } catch (error) {
     dispatch(superAdminSlice.actions.failureForAllUsers());
-    console.error(error.response.data.message);
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
   }
 };
 
@@ -140,16 +141,19 @@ export const getAllPaymentProofs = () => async (dispatch) => {
   try {
     const response = await axios.get(
       "/api/v1/superadmin/paymentproofs/getall",
-      { withCredentials: true }
+      { withCredentials: true },
     );
     dispatch(
       superAdminSlice.actions.successForPaymentProofs(
-        response.data.paymentProofs
-      )
+        response.data.paymentProofs,
+      ),
     );
   } catch (error) {
     dispatch(superAdminSlice.actions.failureForPaymentProofs());
-    console.error(error.response.data.message);
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
   }
 };
 
@@ -158,33 +162,41 @@ export const deletePaymentProof = (id) => async (dispatch) => {
   try {
     const response = await axios.delete(
       `/api/v1/superadmin/paymentproof/delete/${id}`,
-      { withCredentials: true }
+      { withCredentials: true },
     );
     dispatch(superAdminSlice.actions.successForDeletePaymentProof());
     dispatch(getAllPaymentProofs());
     toast.success(response.data.message);
   } catch (error) {
     dispatch(superAdminSlice.actions.failureForDeletePaymentProof());
-    console.error(error.response.data.message);
-    toast.error(error.response.data.message);
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
+    toast.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
   }
 };
 
 export const getSinglePaymentProofDetail = (id) => async (dispatch) => {
   dispatch(superAdminSlice.actions.requestForSinglePaymentProofDetail());
   try {
-    const response = await axios.get(
-      `/api/v1/superadmin/paymentproof/${id}`,
-      { withCredentials: true }
-    );
+    const response = await axios.get(`/api/v1/superadmin/paymentproof/${id}`, {
+      withCredentials: true,
+    });
     dispatch(
       superAdminSlice.actions.successForSinglePaymentProofDetail(
-        response.data.paymentProofDetail
-      )
+        response.data.paymentProofDetail,
+      ),
     );
   } catch (error) {
     dispatch(superAdminSlice.actions.failureForSinglePaymentProofDetail());
-    console.error(error.response.data.message);
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
   }
 };
 
@@ -194,16 +206,27 @@ export const updatePaymentProof = (id, status, amount) => async (dispatch) => {
     const response = await axios.put(
       `/api/v1/superadmin/paymentproof/status/update/${id}`,
       { status, amount },
-      { withCredentials: true, headers: { "Content-Type": "application/json" } }
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      },
     );
     dispatch(superAdminSlice.actions.successForUpdatePaymentProof());
     toast.success(response.data.message);
     dispatch(getAllPaymentProofs());
     dispatch(superAdminSlice.actions.clearAllErrors());
+    return true;
   } catch (error) {
     dispatch(superAdminSlice.actions.failureForUpdatePaymentProof());
-    console.error(error.response.data.message);
-    toast.error(error.response.data.message);
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
+    toast.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
+    return false;
   }
 };
 
@@ -212,15 +235,21 @@ export const deleteAuctionItem = (id) => async (dispatch) => {
   try {
     const response = await axios.delete(
       `/api/v1/superadmin/auctionitem/delete/${id}`,
-      { withCredentials: true }
+      { withCredentials: true },
     );
     dispatch(superAdminSlice.actions.successForAuctionItemDelete());
     toast.success(response.data.message);
     dispatch(getAllAuctionItems());
   } catch (error) {
     dispatch(superAdminSlice.actions.failureForAuctionItemDelete());
-    console.error(error.response.data.message);
-    toast.error(error.response.data.message);
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
+    toast.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
   }
 };
 

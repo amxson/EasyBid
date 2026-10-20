@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { RiAuctionFill } from "react-icons/ri";
 import { MdLeaderboard, MdDashboard } from "react-icons/md";
 import { SiGooglesearchconsole } from "react-icons/si";
 import { BsFillInfoSquareFill } from "react-icons/bs";
-import { FaFacebook } from "react-icons/fa";
-import { RiInstagramFill } from "react-icons/ri";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoMdCloseCircleOutline, IoIosCreate } from "react-icons/io";
 import { FaUserCircle } from "react-icons/fa";
@@ -26,14 +24,23 @@ const SideDrawer = () => {
 
   return (
     <>
-      <div
+      <button
+        type="button"
+        aria-label={show ? "Close menu" : "Open menu"}
+        aria-expanded={show}
+        aria-controls="main-navigation"
         onClick={() => setShow(!show)}
-        className="fixed right-5 top-5 bg-[#D6482B] text-white text-3xl p-2 rounded-md hover:bg-[#b8381e] lg:hidden"
+        className="fixed z-50 right-5 top-5 bg-[#D6482B] text-white text-3xl p-2 rounded-md hover:bg-[#b8381e] lg:hidden"
       >
         <GiHamburgerMenu />
-      </div>
-      <div
-        className={`w-[100%] sm:w-[300px] bg-[#f6f4f0] h-full fixed top-0 ${
+      </button>
+      <nav
+        id="main-navigation"
+        aria-label="Main navigation"
+        onClick={(event) => {
+          if (event.target.closest("a")) setShow(false);
+        }}
+        className={`z-40 overflow-y-auto ${show ? "visible" : "invisible"} lg:visible w-[100%] sm:w-[300px] bg-[#f6f4f0] h-full fixed top-0 ${
           show ? "left-0" : "left-[-100%]"
         } transition-all duration-100 p-4 flex flex-col justify-between lg:left-0 border-r-[1px] border-r-stone-500`}
       >
@@ -110,7 +117,7 @@ const SideDrawer = () => {
                 </Link>
                 <Link
                   to={"/login"}
-                  className="text-[#DECCBE] bg-transparent border-[#DECCBE] border-2 hover:bg-[#fffefd] hover:text-[#fdba88] font-bold text-xl py-1 px-4 rounded-md"
+                  className="text-[#d6482b] bg-transparent border-stone-300 border-2 hover:bg-[#fffefd] hover:text-[#fdba88] font-bold text-xl py-1 px-4 rounded-md"
                 >
                   Login
                 </Link>
@@ -154,27 +161,17 @@ const SideDrawer = () => {
               </Link>
             </li>
           </ul>
-          <IoMdCloseCircleOutline
-            onClick={() => setShow(!show)}
-            className="absolute top-0 right-4 text-[28px] sm:hidden"
-          />
+          <button
+            type="button"
+            aria-label="Close navigation"
+            onClick={() => setShow(false)}
+            className="absolute top-0 right-4 text-[28px] lg:hidden"
+          >
+            <IoMdCloseCircleOutline />
+          </button>
         </div>
 
         <div>
-          <div className="flex gap-2 items-center mb-2">
-            <Link
-              to="/"
-              className="bg-white text-stone-500 p-2 text-xl rounded-sm hover:text-blue-700"
-            >
-              <FaFacebook />
-            </Link>
-            <Link
-              to="/"
-              className="bg-white text-stone-500 p-2 text-xl rounded-sm hover:text-pink-500"
-            >
-              <RiInstagramFill />
-            </Link>
-          </div>
           <Link
             to={"/contact"}
             className="text-stone-500 font-semibold hover:text-[#d6482b] hover:transition-all hover:duration-150"
@@ -183,7 +180,7 @@ const SideDrawer = () => {
           </Link>
           <p className="text-stone-500">&copy; Easybid, LLC.</p>
           <p className="text-stone-500">
-            Degined By{" "}
+            Designed by{" "}
             <Link
               to={"/"}
               className="font-semibold hover:text-[#d6482b] hover:transition-all hover:duration-150"
@@ -192,7 +189,7 @@ const SideDrawer = () => {
             </Link>
           </p>
         </div>
-      </div>
+      </nav>
     </>
   );
 };

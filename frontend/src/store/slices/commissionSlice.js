@@ -8,13 +8,13 @@ const commissionSlice = createSlice({
     loading: false,
   },
   reducers: {
-    postCommissionProofRequest(state, action) {
+    postCommissionProofRequest(state) {
       state.loading = true;
     },
-    postCommissionProofSuccess(state, action) {
+    postCommissionProofSuccess(state) {
       state.loading = false;
     },
-    postCommissionProofFailed(state, action) {
+    postCommissionProofFailed(state) {
       state.loading = false;
     },
   },
@@ -23,19 +23,18 @@ const commissionSlice = createSlice({
 export const postCommissionProof = (data) => async (dispatch) => {
   dispatch(commissionSlice.actions.postCommissionProofRequest());
   try {
-    const response = await axios.post(
-      "/api/v1/commission/proof",
-      data,
-      {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    const response = await axios.post("/api/v1/commission/proof", data, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     dispatch(commissionSlice.actions.postCommissionProofSuccess());
     toast.success(response.data.message);
   } catch (error) {
     dispatch(commissionSlice.actions.postCommissionProofFailed());
-    toast.error(error.response.data.message);
+    toast.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
   }
 };
 

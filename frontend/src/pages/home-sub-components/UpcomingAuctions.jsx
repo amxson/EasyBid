@@ -1,4 +1,3 @@
-import React from "react";
 import { RiAuctionFill } from "react-icons/ri";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -21,7 +20,7 @@ const UpcomingAuctions = () => {
           Auctions For Today
         </h3>
         <div className="flex flex-wrap gap-6">
-          <div  className="bg-[#161613] w-full p-2 gap-10 rounded-md flex flex-col justify-between lg:flex-1 lg:h-auto lg:p-6 2xl:flex-none 2xl:basis-64 2xl:flex-grow 2xl:px-2  2xl:py-6">
+          <div className="bg-[#161613] w-full p-2 gap-10 rounded-md flex flex-col justify-between lg:flex-1 lg:h-auto lg:p-6 2xl:flex-none 2xl:basis-64 2xl:grow 2xl:px-2  2xl:py-6">
             <span className="rounded-full bg-[#fdba88] text-white w-fit p-3">
               <RiAuctionFill />
             </span>
@@ -36,16 +35,22 @@ const UpcomingAuctions = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-4 w-full lg:flex-1 2xl:flex-none 2xl:basis-64 2xl:flex-grow">
+          <div className="flex flex-col gap-4 w-full lg:flex-1 2xl:flex-none 2xl:basis-64 2xl:grow">
             {auctionsStartingToday.slice(0, 2).map((element) => {
               return (
                 <Link
-                to={`/auction/item/${element._id}`}
+                  to={`/auction/item/${element._id}`}
                   key={element._id}
                   className="w-full flex flex-col gap-4 bg-white p-2 rounded-md 2xl:gap-2 hover:shadow-md transition-all duration-300"
                 >
                   <div className="flex items-center gap-2">
                     <img
+                      onError={(event) => {
+                        if (
+                          !event.currentTarget.src.endsWith("/item-placeholder.svg")
+                        )
+                          event.currentTarget.src = "/item-placeholder.svg";
+                      }}
                       src={element.image?.url}
                       alt={element.title}
                       className="w-16 h-16 2xl:w-10 2xl:h-10"
@@ -59,27 +64,39 @@ const UpcomingAuctions = () => {
                       Starting Bid:
                     </p>{" "}
                     <p className="text-[#fdba88 font-semibold]">
-                      Birr. {new Intl.NumberFormat('en-US').format(element.startingBid)}
+                      Birr.{" "}
+                      {new Intl.NumberFormat("en-US").format(
+                        element.startingBid,
+                      )}
                     </p>{" "}
                   </div>
                   <div className="flex flex-col">
                     <p className="text-stone-600 font-bold">Starting Time:</p>
-                    <p className="text-black text-[12px]">{element.startTime}</p>
+                    <p className="text-black text-[12px]">
+                      {element.startTime}
+                    </p>
                   </div>
                 </Link>
               );
             })}
           </div>
 
-          <div className="flex flex-col gap-4 w-full 2xl:basis-64 2xl:flex-grow">
+          <div className="flex flex-col gap-4 w-full 2xl:basis-64 2xl:grow">
             {auctionsStartingToday.slice(2, 4).map((element) => {
               return (
-                <Link  to={`/auction/item/${element._id}`}
+                <Link
+                  to={`/auction/item/${element._id}`}
                   key={element._id}
                   className="w-full flex flex-col gap-4 bg-white p-2 rounded-md 2xl:gap-2 hover:shadow-md transition-all duration-300"
                 >
                   <div className="flex items-center gap-2">
                     <img
+                      onError={(event) => {
+                        if (
+                          !event.currentTarget.src.endsWith("/item-placeholder.svg")
+                        )
+                          event.currentTarget.src = "/item-placeholder.svg";
+                      }}
                       src={element.image?.url}
                       alt={element.title}
                       className="w-16 h-16 2xl:w-10 2xl:h-10"
@@ -93,26 +110,38 @@ const UpcomingAuctions = () => {
                       Starting Bid:
                     </p>{" "}
                     <p className="text-[#fdba88 font-semibold]">
-                      Birr. {new Intl.NumberFormat('en-US').format(element.startingBid)}
+                      Birr.{" "}
+                      {new Intl.NumberFormat("en-US").format(
+                        element.startingBid,
+                      )}
                     </p>{" "}
                   </div>
                   <div className="flex flex-col">
                     <p className="text-stone-600 font-bold">Starting Time:</p>
-                    <p className="text-black  text-[12px]">{element.startTime}</p>
+                    <p className="text-black  text-[12px]">
+                      {element.startTime}
+                    </p>
                   </div>
                 </Link>
               );
             })}
           </div>
-          <div className="flex flex-col gap-4 w-full 2xl:basis-64 2xl:flex-grow">
+          <div className="flex flex-col gap-4 w-full 2xl:basis-64 2xl:grow">
             {auctionsStartingToday.slice(4, 6).map((element) => {
               return (
-                <Link to={`/auction/item/${element._id}`}
+                <Link
+                  to={`/auction/item/${element._id}`}
                   key={element._id}
                   className="w-full flex flex-col gap-4 bg-white p-2 rounded-md 2xl:gap-2 hover:shadow-md transition-all duration-300"
                 >
                   <div className="flex items-center gap-2">
                     <img
+                      onError={(event) => {
+                        if (
+                          !event.currentTarget.src.endsWith("/item-placeholder.svg")
+                        )
+                          event.currentTarget.src = "/item-placeholder.svg";
+                      }}
                       src={element.image?.url}
                       alt={element.title}
                       className="w-16 h-16 2xl:w-10 2xl:h-10"
@@ -126,12 +155,17 @@ const UpcomingAuctions = () => {
                       Starting Bid:
                     </p>{" "}
                     <p className="text-[#fdba88 font-semibold]">
-                      Birr. {new Intl.NumberFormat('en-US').format(element.startingBid)}
+                      Birr.{" "}
+                      {new Intl.NumberFormat("en-US").format(
+                        element.startingBid,
+                      )}
                     </p>{" "}
                   </div>
                   <div className="flex flex-col">
                     <p className="text-stone-600 font-bold">Starting Time:</p>
-                    <p className="text-black  text-[12px]">{element.startTime}</p>
+                    <p className="text-black  text-[12px]">
+                      {element.startTime}
+                    </p>
                   </div>
                 </Link>
               );

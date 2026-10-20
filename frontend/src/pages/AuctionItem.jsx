@@ -1,38 +1,48 @@
+import BidHelp from "@/custom-components/BidHelp";
+import { useNow } from "@/hooks/useNow";
 import Spinner from "@/custom-components/Spinner";
 import { getAuctionDetail } from "@/store/slices/auctionSlice";
 import { placeBid } from "@/store/slices/bidSlice";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaGreaterThan } from "react-icons/fa";
 import { RiAuctionFill } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 const AuctionItem = () => {
   const { id } = useParams();
-  const { loading, auctionDetail, auctionBidders } = useSelector(
-    (state) => state.auction
+  const { loading, auctionDetail, auctionBidders, detailError } = useSelector(
+    (state) => state.auction,
   );
-  const { isAuthenticated } = useSelector((state) => state.user);
+  const { isAuthenticated, user } = useSelector((state) => state.user);
 
-  const navigateTo = useNavigate();
+  const now = useNow();
+  const bidding = useSelector((state) => state.bid.loading);
   const dispatch = useDispatch();
 
-  const [amount, setAmount] = useState(0);
-  const handleBid = () => {
-    const formData = new FormData();
-    formData.append("amount", amount);
-    dispatch(placeBid(id, formData));
-    dispatch(getAuctionDetail(id));
+  const [amount, setAmount] = useState("");
+  const handleBid = async (event) => {
+    event.preventDefault();
+    if (bidding) return;
+    if (await dispatch(placeBid(id, { amount }))) setAmount("");
   };
-
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigateTo("/");
-    }
-    if (id) {
-      dispatch(getAuctionDetail(id));
-    }
-  }, [isAuthenticated]);
+    dispatch(getAuctionDetail(id));
+    const timer = setInterval(
+      () => dispatch(getAuctionDetail(id, { silent: true })),
+      10000,
+    );
+    return () => clearInterval(timer);
+  }, [dispatch, id]);
+  if (detailError && !auctionDetail._id)
+    return (
+      <section className="px-5 pt-24 lg:pl-[320px]">
+        <p role="alert">{detailError}</p>
+        <Link to="/auctions" className="text-[#d6482b] underline">
+          Back to auctions
+        </Link>
+      </section>
+    );
   return (
     <>
       <section className="w-full ml-0 m-0 h-fit px-5 pt-20 lg:pl-[320px] flex flex-col">
@@ -61,6 +71,14 @@ const AuctionItem = () => {
               <div className="flex gap-4 flex-col lg:flex-row">
                 <div className="bg-white w-[100%] lg:w-40 lg:h-40 flex justify-center items-center p-5">
                   <img
+                    onError={(event) => {
+                      if (
+                        !event.currentTarget.src.endsWith(
+                          "/item-placeholder.svg",
+                        )
+                      )
+                        event.currentTarget.src = "/item-placeholder.svg";
+                    }}
                     src={auctionDetail.image?.url}
                     alt={auctionDetail.title}
                   />
@@ -78,11 +96,25 @@ const AuctionItem = () => {
                   <p className="text-xl font-semibold">
                     Minimum Bid:{" "}
                     <span className="text-[#D6482B]">
-                      {new Intl.NumberFormat('en-US').format(auctionDetail.startingBid)}Birr
+                      {new Intl.NumberFormat("en-US").format(
+                        auctionDetail.startingBid,
+                      )}{" "}
+                      Birr
                     </span>
                   </p>
                 </div>
               </div>
+              <p className="text-lg font-semibold">
+                Current bid:{" "}
+                <span className="text-[#d6482b]">
+                  {Number(auctionDetail.currentBid || 0).toLocaleString()} Birr
+                </span>
+              </p>
+              {detailError && (
+                <p role="alert" className="text-sm text-[#b8381e]">
+                  {detailError}
+                </p>
+              )}
               <p className="text-xl w-fit font-bold">
                 Auction Item Description
               </p>
@@ -95,6 +127,7 @@ const AuctionItem = () => {
                     </li>
                   );
                 })}
+              {isAuthenticated && <BidHelp key={id} auctionId={id} />}
             </div>
             <div className="flex-1">
               <header className="bg-stone-200 py-4 text-[24px] font-semibold px-4">
@@ -102,8 +135,8 @@ const AuctionItem = () => {
               </header>
               <div className="bg-white px-4 min-h-fit lg:min-h-[650px]">
                 {auctionBidders &&
-                new Date(auctionDetail.startTime) < Date.now() &&
-                new Date(auctionDetail.endTime) > Date.now() ? (
+                new Date(auctionDetail.startTime) < now &&
+                new Date(auctionDetail.endTime) > now ? (
                   auctionBidders.length > 0 ? (
                     auctionBidders.map((element, index) => {
                       return (
@@ -113,15 +146,26 @@ const AuctionItem = () => {
                         >
                           <div className="flex items-center gap-4">
                             <img
+                              onError={(event) => {
+                                if (
+                                  !event.currentTarget.src.endsWith(
+                                    "/imageHolder.jpg",
+                                  )
+                                )
+                                  event.currentTarget.src = "/imageHolder.jpg";
+                              }}
                               src={element.profileImage}
                               alt={element.userName}
                               className="w-12 h-12 rounded-full my-2 hidden md:block"
                             />
                             <p className="text-[18px] font-semibold">
                               {element.userName}
-                              
                             </p>
-                            <p className="flex-1 text-center">{new Intl.NumberFormat('en-US').format(element.amount)}</p>
+                            <p className="flex-1 text-center">
+                              {new Intl.NumberFormat("en-US").format(
+                                element.amount,
+                              )}
+                            </p>
                           </div>
                           {index === 0 ? (
                             <p className="text-[20px] font-semibold text-green-600">
@@ -148,14 +192,22 @@ const AuctionItem = () => {
                       No bids for this auction
                     </p>
                   )
-                ) : Date.now() < new Date(auctionDetail.startTime) ? (
+                ) : now < new Date(auctionDetail.startTime) ? (
                   <img
+                    onError={(event) => {
+                      if (!event.currentTarget.src.endsWith("/imageHolder.jpg"))
+                        event.currentTarget.src = "/imageHolder.jpg";
+                    }}
                     src="/notStarted.png"
                     alt="not-started"
                     className="w-full max-h-[650px]"
                   />
                 ) : (
                   <img
+                    onError={(event) => {
+                      if (!event.currentTarget.src.endsWith("/imageHolder.jpg"))
+                        event.currentTarget.src = "/imageHolder.jpg";
+                    }}
                     src="/auctionEnded.png"
                     alt="ended"
                     className="w-full max-h-[650px]"
@@ -163,33 +215,58 @@ const AuctionItem = () => {
                 )}
               </div>
 
-              <div className="bg-[#D6482B] py-4 text-[16px] md:text-[24px] font-semibold px-4 flex items-center justify-between">
-                {Date.now() >= new Date(auctionDetail.startTime) &&
-                Date.now() <= new Date(auctionDetail.endTime) ? (
-                  <>
-                    <div className="flex gap-3 flex-col sm:flex-row sm:items-center">
-                      <p className="text-white">Place Bid</p>
-                      <input
-                        type="number"
-                        className="w-32 focus:outline-none md:text-[20px] p-1"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                      />
-                    </div>
-                    <button
-                      className="p-4 text-white bg-black rounded-full transition-all duration-300 hover:bg-[#222]"
-                      onClick={handleBid}
+              <div className="bg-[#D6482B] py-4 text-[16px] md:text-[20px] font-semibold px-4">
+                {now >= new Date(auctionDetail.startTime) &&
+                now < new Date(auctionDetail.endTime) ? (
+                  !isAuthenticated ? (
+                    <Link to="/login" className="text-white underline">
+                      Log in to place a bid
+                    </Link>
+                  ) : user.role !== "Bidder" ? (
+                    <p className="text-white">
+                      Bidding is available to bidder accounts.
+                    </p>
+                  ) : (
+                    <form
+                      onSubmit={handleBid}
+                      className="flex items-end justify-between gap-3"
                     >
-                      <RiAuctionFill />
-                    </button>
-                  </>
-                ) : new Date(auctionDetail.startTime) > Date.now() ? (
-                  <p className="text-white font-semibold text-xl">
-                    Auction has not started yet!
-                  </p>
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor="bid-amount" className="text-white">
+                          Your bid in Birr
+                        </label>
+                        <input
+                          id="bid-amount"
+                          aria-label="Your bid in Birr"
+                          type="number"
+                          step="0.01"
+                          min={Math.max(
+                            auctionDetail.startingBid || 0.01,
+                            Math.round(
+                              ((auctionDetail.currentBid || 0) + 0.01) * 100,
+                            ) / 100,
+                          )}
+                          required
+                          className="w-36 bg-white border border-stone-300 rounded-md text-stone-900 p-2"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        aria-label={bidding ? "Placing bid" : "Place bid"}
+                        disabled={bidding}
+                        className="p-4 text-white bg-black rounded-full hover:bg-[#222]"
+                      >
+                        <RiAuctionFill />
+                      </button>
+                    </form>
+                  )
                 ) : (
-                  <p className="text-white font-semibold text-xl">
-                    Auction has ended!
+                  <p className="text-white">
+                    {new Date(auctionDetail.startTime) > now
+                      ? "Auction has not started yet."
+                      : "Auction has ended."}
                   </p>
                 )}
               </div>

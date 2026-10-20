@@ -1,6 +1,6 @@
 import Spinner from "@/custom-components/Spinner";
 import { getAuctionDetail } from "@/store/slices/auctionSlice";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { FaGreaterThan } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -8,7 +8,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 const ViewAuctionDetails = () => {
   const { id } = useParams();
   const { loading, auctionDetail, auctionBidders } = useSelector(
-    (state) => state.auction
+    (state) => state.auction,
   );
   const { isAuthenticated, user } = useSelector((state) => state.user);
 
@@ -22,7 +22,7 @@ const ViewAuctionDetails = () => {
     if (id) {
       dispatch(getAuctionDetail(id));
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigateTo, user.role, dispatch, id]);
 
   return (
     <>
@@ -52,6 +52,10 @@ const ViewAuctionDetails = () => {
               <div className="flex gap-4 flex-col lg:flex-row">
                 <div className="bg-white w-[100%] lg:w-40 lg:h-40 flex justify-center items-center p-5">
                   <img
+                    onError={(event) => {
+                      if (!event.currentTarget.src.endsWith("/imageHolder.jpg"))
+                        event.currentTarget.src = "/imageHolder.jpg";
+                    }}
                     src={auctionDetail.image?.url}
                     alt={auctionDetail.title}
                   />
@@ -104,6 +108,14 @@ const ViewAuctionDetails = () => {
                       >
                         <div className="flex flex-1 items-center gap-4">
                           <img
+                            onError={(event) => {
+                              if (
+                                !event.currentTarget.src.endsWith(
+                                  "/imageHolder.jpg",
+                                )
+                              )
+                                event.currentTarget.src = "/imageHolder.jpg";
+                            }}
                             src={element.profileImage}
                             alt={element.userName}
                             className="w-12 h-12 rounded-full my-2 hidden md:block"
@@ -112,7 +124,11 @@ const ViewAuctionDetails = () => {
                             {element.userName}
                           </p>
                         </div>
-                        <p className="flex-1 text-center">{new Intl.NumberFormat('en-US').format(element.amount)}</p>
+                        <p className="flex-1 text-center">
+                          {new Intl.NumberFormat("en-US").format(
+                            element.amount,
+                          )}
+                        </p>
                         {index === 0 ? (
                           <p className="text-[20px] font-semibold text-green-600 flex-1 text-end">
                             1st
@@ -135,12 +151,20 @@ const ViewAuctionDetails = () => {
                   })
                 ) : Date.now() < new Date(auctionDetail.startTime) ? (
                   <img
+                    onError={(event) => {
+                      if (!event.currentTarget.src.endsWith("/imageHolder.jpg"))
+                        event.currentTarget.src = "/imageHolder.jpg";
+                    }}
                     src="/notStarted.png"
                     alt="not-started"
                     className="w-full max-h-[650px]"
                   />
                 ) : (
                   <img
+                    onError={(event) => {
+                      if (!event.currentTarget.src.endsWith("/imageHolder.jpg"))
+                        event.currentTarget.src = "/imageHolder.jpg";
+                    }}
                     src="/auctionEnded.png"
                     alt="ended"
                     className="w-full max-h-[650px]"

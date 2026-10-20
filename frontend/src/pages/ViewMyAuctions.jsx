@@ -1,7 +1,7 @@
 import CardTwo from "@/custom-components/CardTwo";
 import Spinner from "@/custom-components/Spinner";
 import { getMyAuctionItems } from "@/store/slices/auctionSlice";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -17,7 +17,7 @@ const ViewMyAuctions = () => {
       navigateTo("/");
     }
     dispatch(getMyAuctionItems());
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, navigateTo, user.role]);
 
   return (
     <>
@@ -32,7 +32,7 @@ const ViewMyAuctions = () => {
         ) : (
           <div
             className={`${
-              myAuctions.length > 2 && "flex-grow"
+              myAuctions.length > 2 && "grow"
             } flex flex-wrap gap-6`}
           >
             {myAuctions.length > 0 ? (

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -21,12 +20,12 @@ ChartJS.register(
   Tooltip,
   Legend,
   LineElement,
-  PointElement
+  PointElement,
 );
 
 const BiddersAuctioneersGraph = () => {
   const { totalAuctioneers, totalBidders } = useSelector(
-    (state) => state.superAdmin
+    (state) => state.superAdmin,
   );
   const data = {
     labels: [
@@ -63,7 +62,6 @@ const BiddersAuctioneersGraph = () => {
     scales: {
       y: {
         beginAtZero: true,
-        max: 50,
         ticks: {
           callback: function (value) {
             return value.toLocaleString();

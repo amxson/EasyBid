@@ -1,5 +1,3 @@
-import React from "react";
-
 const About = () => {
   const values = [
     {
@@ -38,11 +36,10 @@ const About = () => {
             About Us
           </h1>
           <p className="text-xl text-stone-600">
-            Welcome to Easybid, the ultimate destination for online auctions
-            and bidding excitement. Founded in 2024, we are dedicated to
-            providing a dynamic and user-friendly platform for buyers and
-            sellers to connect, explore, and transact in a secure and seamless
-            environment.
+            Welcome to Easybid, the ultimate destination for online auctions and
+            bidding excitement. Founded in 2024, we are dedicated to providing a
+            dynamic and user-friendly platform for buyers and sellers to
+            connect, explore, and transact in a secure and seamless environment.
           </p>
         </div>
         <div>
@@ -97,7 +94,7 @@ const About = () => {
             Join Us
           </h3>
           <p className="text-xl text-stone-600">
-            Whether you're looking to buy, sell, or simply explore, Easybid
+            Whether you&apos;re looking to buy, sell, or simply explore, Easybid
             invites you to join our growing community of auction enthusiasts.
             Discover new opportunities, uncover hidden gems, and experience the
             thrill of winning your next great find.

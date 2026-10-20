@@ -1,7 +1,7 @@
 import { login } from "@/store/slices/userSlice";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,17 +14,14 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("password", password);
-    dispatch(login(formData));
+    dispatch(login({ email, password }));
   };
 
   useEffect(() => {
     if (isAuthenticated) {
       navigateTo("/");
     }
-  }, [dispatch, isAuthenticated, loading]);
+  }, [isAuthenticated, navigateTo]);
 
   return (
     <>
@@ -37,29 +34,52 @@ const Login = () => {
           </h1>
           <form onSubmit={handleLogin} className="flex flex-col gap-5 w-full">
             <div className="flex flex-col gap-2">
-              <label className="text-[16px] text-stone-500">Email</label>
+              <label
+                htmlFor="login-email"
+                className="text-[16px] text-stone-500"
+              >
+                Email
+              </label>
               <input
+                id="login-email"
+                autoComplete="email"
+                required
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none"
+                className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[16px] text-stone-500">Password</label>
+              <label
+                htmlFor="login-password"
+                className="text-[16px] text-stone-500"
+              >
+                Password
+              </label>
               <input
+                id="login-password"
+                autoComplete="current-password"
+                required
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-none"
+                className="text-[16px] py-2 bg-transparent border-b-[1px] border-b-stone-500 focus:outline-hidden"
               />
             </div>
             <button
               className="bg-[#d6482b] font-semibold hover:bg-[#b8381e] transition-all duration-300 text-xl py-2 px-4 rounded-md text-white mx-auto my-4"
+              disabled={loading}
               type="submit"
             >
               {loading ? "Logging In..." : "Login"}
             </button>
+            <Link
+              to="/forgot-password"
+              className="text-sm text-[#d6482b] underline underline-offset-4 text-center"
+            >
+              Forgot password?
+            </Link>
           </form>
         </div>
       </section>

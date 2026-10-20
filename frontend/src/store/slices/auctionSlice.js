@@ -8,44 +8,52 @@ const auctionSlice = createSlice({
     loading: false,
     itemDetail: {},
     auctionDetail: {},
-    auctionBidders: {},
+    auctionBidders: [],
+    detailError: null,
     myAuctions: [],
     allAuctions: [],
   },
   reducers: {
-    createAuctionRequest(state, action) {
+    createAuctionRequest(state) {
       state.loading = true;
     },
-    createAuctionSuccess(state, action) {
+    createAuctionSuccess(state) {
       state.loading = false;
     },
-    createAuctionFailed(state, action) {
+    createAuctionFailed(state) {
       state.loading = false;
     },
-    getAllAuctionItemRequest(state, action) {
+    getAllAuctionItemRequest(state) {
       state.loading = true;
     },
     getAllAuctionItemSuccess(state, action) {
       state.loading = false;
       state.allAuctions = action.payload;
     },
-    getAllAuctionItemFailed(state, action) {
+    getAllAuctionItemFailed(state) {
       state.loading = false;
     },
     getAuctionDetailRequest(state, action) {
-      state.loading = true;
+      if (!action.payload?.silent) state.loading = true;
+      if (state.requestedId !== action.payload.id) {
+        state.auctionDetail = {};
+        state.auctionBidders = [];
+      }
+      state.detailError = null;
+      state.requestedId = action.payload.id;
     },
     getAuctionDetailSuccess(state, action) {
+      if (state.requestedId !== action.payload.auctionItem._id) return;
       state.loading = false;
       state.auctionDetail = action.payload.auctionItem;
       state.auctionBidders = action.payload.bidders;
     },
     getAuctionDetailFailed(state, action) {
       state.loading = false;
-      state.auctionDetail = state.auctionDetail;
-      state.auctionBidders = state.auctionBidders;
+      if (state.requestedId !== action.payload.id) return;
+      state.detailError = action.payload.message;
     },
-    getMyAuctionsRequest(state, action) {
+    getMyAuctionsRequest(state) {
       state.loading = true;
       state.myAuctions = [];
     },
@@ -53,35 +61,31 @@ const auctionSlice = createSlice({
       state.loading = false;
       state.myAuctions = action.payload;
     },
-    getMyAuctionsFailed(state, action) {
+    getMyAuctionsFailed(state) {
       state.loading = false;
       state.myAuctions = [];
     },
-    deleteAuctionItemRequest(state, action) {
+    deleteAuctionItemRequest(state) {
       state.loading = true;
     },
-    deleteAuctionItemSuccess(state, action) {
+    deleteAuctionItemSuccess(state) {
       state.loading = false;
     },
-    deleteAuctionItemFailed(state, action) {
+    deleteAuctionItemFailed(state) {
       state.loading = false;
     },
-    republishItemRequest(state, action) {
+    republishItemRequest(state) {
       state.loading = true;
     },
-    republishItemSuccess(state, action) {
+    republishItemSuccess(state) {
       state.loading = false;
     },
-    republishItemFailed(state, action) {
+    republishItemFailed(state) {
       state.loading = false;
     },
 
-    resetSlice(state, action) {
+    resetSlice(state) {
       state.loading = false;
-      state.auctionDetail = state.auctionDetail;
-      state.itemDetail = state.itemDetail;
-      state.myAuctions = state.myAuctions;
-      state.allAuctions = state.allAuctions;
     },
   },
 });
@@ -89,12 +93,11 @@ const auctionSlice = createSlice({
 export const getAllAuctionItems = () => async (dispatch) => {
   dispatch(auctionSlice.actions.getAllAuctionItemRequest());
   try {
-    const response = await axios.get(
-      "/api/v1/auctionitem/allitems",
-      { withCredentials: true }
-    );
+    const response = await axios.get("/api/v1/auctionitem/allitems", {
+      withCredentials: true,
+    });
     dispatch(
-      auctionSlice.actions.getAllAuctionItemSuccess(response.data.items)
+      auctionSlice.actions.getAllAuctionItemSuccess(response.data.items),
     );
     dispatch(auctionSlice.actions.resetSlice());
   } catch (error) {
@@ -107,10 +110,9 @@ export const getAllAuctionItems = () => async (dispatch) => {
 export const getMyAuctionItems = () => async (dispatch) => {
   dispatch(auctionSlice.actions.getMyAuctionsRequest());
   try {
-    const response = await axios.get(
-      "/api/v1/auctionitem/myitems",
-      { withCredentials: true }
-    );
+    const response = await axios.get("/api/v1/auctionitem/myitems", {
+      withCredentials: true,
+    });
     dispatch(auctionSlice.actions.getMyAuctionsSuccess(response.data.items));
     dispatch(auctionSlice.actions.resetSlice());
   } catch (error) {
@@ -120,40 +122,45 @@ export const getMyAuctionItems = () => async (dispatch) => {
   }
 };
 
-export const getAuctionDetail = (id) => async (dispatch) => {
-  dispatch(auctionSlice.actions.getAuctionDetailRequest());
-  try {
-    const response = await axios.get(
-      `/api/v1/auctionitem/auction/${id}`,
-      { withCredentials: true }
-    );
-    dispatch(auctionSlice.actions.getAuctionDetailSuccess(response.data));
-    dispatch(auctionSlice.actions.resetSlice());
-  } catch (error) {
-    dispatch(auctionSlice.actions.getAuctionDetailFailed());
-    console.error(error);
-    dispatch(auctionSlice.actions.resetSlice());
-  }
-};
+export const getAuctionDetail =
+  (id, { silent = false } = {}) =>
+  async (dispatch) => {
+    dispatch(auctionSlice.actions.getAuctionDetailRequest({ id, silent }));
+    try {
+      const response = await axios.get(`/api/v1/auctionitem/auction/${id}`, {
+        withCredentials: true,
+      });
+      dispatch(auctionSlice.actions.getAuctionDetailSuccess(response.data));
+      dispatch(auctionSlice.actions.resetSlice());
+    } catch (error) {
+      dispatch(
+        auctionSlice.actions.getAuctionDetailFailed({
+          id,
+          message: error.response?.data?.message || "Cannot load this auction.",
+        }),
+      );
+      console.error(error);
+      dispatch(auctionSlice.actions.resetSlice());
+    }
+  };
 
 export const createAuction = (data) => async (dispatch) => {
   dispatch(auctionSlice.actions.createAuctionRequest());
   try {
-    const response = await axios.post(
-      "/api/v1/auctionitem/create",
-      data,
-      {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    const response = await axios.post("/api/v1/auctionitem/create", data, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     dispatch(auctionSlice.actions.createAuctionSuccess());
     toast.success(response.data.message);
     dispatch(getAllAuctionItems());
     dispatch(auctionSlice.actions.resetSlice());
   } catch (error) {
     dispatch(auctionSlice.actions.createAuctionFailed());
-    toast.error(error.response.data.message);
+    toast.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
     dispatch(auctionSlice.actions.resetSlice());
   }
 };
@@ -167,7 +174,7 @@ export const republishAuction = (id, data) => async (dispatch) => {
       {
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
     dispatch(auctionSlice.actions.republishItemSuccess());
     toast.success(response.data.message);
@@ -176,8 +183,14 @@ export const republishAuction = (id, data) => async (dispatch) => {
     dispatch(auctionSlice.actions.resetSlice());
   } catch (error) {
     dispatch(auctionSlice.actions.republishItemFailed());
-    toast.error(error.response.data.message);
-    console.error(error.response.data.message);
+    toast.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
     dispatch(auctionSlice.actions.resetSlice());
   }
 };
@@ -185,12 +198,9 @@ export const republishAuction = (id, data) => async (dispatch) => {
 export const deleteAuction = (id) => async (dispatch) => {
   dispatch(auctionSlice.actions.deleteAuctionItemRequest());
   try {
-    const response = await axios.delete(
-      `/api/v1/auctionitem/delete/${id}`,
-      {
-        withCredentials: true,
-      }
-    );
+    const response = await axios.delete(`/api/v1/auctionitem/delete/${id}`, {
+      withCredentials: true,
+    });
     dispatch(auctionSlice.actions.deleteAuctionItemSuccess());
     toast.success(response.data.message);
     dispatch(getMyAuctionItems());
@@ -198,8 +208,14 @@ export const deleteAuction = (id) => async (dispatch) => {
     dispatch(auctionSlice.actions.resetSlice());
   } catch (error) {
     dispatch(auctionSlice.actions.deleteAuctionItemFailed());
-    toast.error(error.response.data.message);
-    console.error(error.response.data.message);
+    toast.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
+    console.error(
+      error.response?.data?.message ||
+        "Cannot reach EasyBid. Please try again.",
+    );
     dispatch(auctionSlice.actions.resetSlice());
   }
 };

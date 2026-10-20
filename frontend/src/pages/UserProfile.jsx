@@ -1,5 +1,5 @@
 import Spinner from "@/custom-components/Spinner";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +10,7 @@ const UserProfile = () => {
     if (!isAuthenticated) {
       navigateTo("/");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigateTo, user.role]);
   return (
     <>
       <section className="w-full ml-0 m-0 h-fit px-5 pt-20 lg:pl-[320px] flex flex-col min-h-screen py-4 justify-start">
@@ -20,6 +20,10 @@ const UserProfile = () => {
           <>
             <div className="bg-white mx-auto w-full h-auto px-2 flex flex-col gap-4 items-center py-4 justify-center rounded-md">
               <img
+                onError={(event) => {
+                  if (!event.currentTarget.src.endsWith("/imageHolder.jpg"))
+                    event.currentTarget.src = "/imageHolder.jpg";
+                }}
                 src={user.profileImage?.url}
                 alt="/imageHolder.jpg"
                 className="w-36 h-36 rounded-full"
@@ -35,7 +39,7 @@ const UserProfile = () => {
                     <input
                       type="text"
                       defaultValue={user.userName}
-                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                       disabled
                     />
                   </div>
@@ -46,7 +50,7 @@ const UserProfile = () => {
                     <input
                       type="text"
                       defaultValue={user.email}
-                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                       disabled
                     />
                   </div>
@@ -57,7 +61,7 @@ const UserProfile = () => {
                     <input
                       type="number"
                       defaultValue={user.phone}
-                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                       disabled
                     />
                   </div>
@@ -68,7 +72,7 @@ const UserProfile = () => {
                     <input
                       type="text"
                       defaultValue={user.address}
-                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                       disabled
                     />
                   </div>
@@ -79,7 +83,7 @@ const UserProfile = () => {
                     <input
                       type="text"
                       defaultValue={user.role}
-                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                       disabled
                     />
                   </div>
@@ -90,7 +94,7 @@ const UserProfile = () => {
                     <input
                       type="text"
                       defaultValue={user.createdAt?.substring(0, 10)}
-                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                      className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                       disabled
                     />
                   </div>
@@ -110,7 +114,7 @@ const UserProfile = () => {
                       <input
                         type="text"
                         defaultValue={user.paymentMethods.bankTransfer.bankName}
-                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                         disabled
                       />
                     </div>
@@ -123,7 +127,7 @@ const UserProfile = () => {
                         defaultValue={
                           user.paymentMethods.bankTransfer.bankAccountNumber
                         }
-                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                         disabled
                       />
                     </div>
@@ -136,7 +140,7 @@ const UserProfile = () => {
                         defaultValue={
                           user.paymentMethods.bankTransfer.bankAccountName
                         }
-                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                         disabled
                       />
                     </div>
@@ -149,7 +153,7 @@ const UserProfile = () => {
                         defaultValue={
                           user.paymentMethods.Telebirr.TelebirrAccountNumber
                         }
-                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                         disabled
                       />
                     </div>
@@ -160,7 +164,7 @@ const UserProfile = () => {
                       <input
                         type="text"
                         defaultValue={user.paymentMethods.paypal.paypalEmail}
-                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                        className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                         disabled
                       />
                     </div>
@@ -182,7 +186,7 @@ const UserProfile = () => {
                         <input
                           type="text"
                           defaultValue={user.unpaidCommission}
-                          className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                          className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                           disabled
                         />
                       </div>
@@ -197,7 +201,7 @@ const UserProfile = () => {
                         <input
                           type="text"
                           defaultValue={user.auctionsWon}
-                          className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                          className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                           disabled
                         />
                       </div>
@@ -208,7 +212,7 @@ const UserProfile = () => {
                         <input
                           type="text"
                           defaultValue={user.moneySpent}
-                          className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
+                          className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-hidden"
                           disabled
                         />
                       </div>

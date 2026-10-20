@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import emailjs from "@emailjs/browser";
+import axios from "axios";
 import { toast } from "react-toastify";
 
 const Contact = () => {
@@ -24,22 +24,19 @@ const Contact = () => {
       message,
     };
 
-    emailjs
-      .send(
-        "service_v01mtcu",
-        "template_3a1r5xp",
-        templateParams,
-        "YcOimjllS64zn4ghK"
-      )
-      .then(() => {
-        toast.success("Thank You! Your message has been sent successfully.");
-        setLoading(false);
+    axios
+      .post("/api/v1/user/contact", templateParams)
+      .then(({ data }) => {
+        toast.success(data.message);
         navigateTo("/");
       })
-      .catch((err) => {
-        toast.error("Failed to send message.");
-        setLoading(false);
-      });
+      .catch((error) =>
+        toast.error(
+          error.response?.data?.message ||
+            "Cannot send your message. Please try again.",
+        ),
+      )
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -61,7 +58,7 @@ const Contact = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D6482B]"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-[#D6482B]"
                 required
               />
             </div>
@@ -71,17 +68,17 @@ const Contact = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D6482B]"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-[#D6482B]"
                 required
               />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[16px] text-stone-500">Your Phone</label>
               <input
-                type="number"
+                type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D6482B]"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-[#D6482B]"
                 required
               />
             </div>
@@ -91,7 +88,7 @@ const Contact = () => {
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D6482B]"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-[#D6482B]"
                 required
               />
             </div>
@@ -101,13 +98,14 @@ const Contact = () => {
                 rows={7}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D6482B]"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-[#D6482B]"
                 required
               />
             </div>
 
             <button
               className="bg-[#d6482b] mx-auto font-semibold hover:bg-[#b8381e] text-xl transition-all duration-300 py-2 px-4 rounded-md text-white my-4"
+              disabled={loading}
               type="submit"
             >
               {loading ? "Sending Message..." : "Send Message"}
